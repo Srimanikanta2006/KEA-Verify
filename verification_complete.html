@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100%;min-height:100%;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "inverse-surface": "#2a313d", "secondary-fixed": "#dce2f7", "tertiary-container": "#29a678", "background": "#f9f9ff", "primary-fixed-dim": "#ffb782", "on-surface": "#151c27", "on-error-container": "#93000a", "surface-bright": "#f9f9ff", "outline": "#887365", "surface-container-highest": "#dce2f3", "primary-container": "#d97b29", "surface": "#f9f9ff", "inverse-primary": "#ffb782", "secondary-container": "#d9dff5", "on-background": "#151c27", "on-primary-fixed-variant": "#703800", "surface-container": "#e7eefe", "surface-container-high": "#e2e8f8", "surface-container-lowest": "#ffffff", "on-tertiary-container": "#003321", "secondary": "#575e70", "on-surface-variant": "#554337", "on-tertiary": "#ffffff", "on-secondary-container": "#5c6274", "on-secondary": "#ffffff", "surface-dim": "#d3daea", "on-primary-container": "#482100", "primary-fixed": "#ffdcc5", "surface-variant": "#dce2f3", "surface-container-low": "#f0f3ff", "tertiary": "#006c4a", "on-secondary-fixed": "#141b2b", "on-tertiary-fixed": "#002114", "on-tertiary-fixed-variant": "#005137", "on-primary": "#ffffff", "outline-variant": "#dbc2b2", "error-container": "#ffdad6", "primary": "#934b00", "on-secondary-fixed-variant": "#404758", "tertiary-fixed": "#85f8c4", "on-primary-fixed": "#301400", "inverse-on-surface": "#ebf1ff", "on-error": "#ffffff", "surface-tint": "#934b00", "secondary-fixed-dim": "#c0c6db", "tertiary-fixed-dim": "#68dba9", "error": "#ba1a1a" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.25rem", "margin": "1rem", "space-sm": "0.5rem", "space-xl": "2rem", "gutter": "1rem", "space-lg": "1.5rem", "space-md": "1rem" }, fontFamily: { "headline-xl": ["Inter"], "headline-md": ["Inter"], "label-md": ["Inter"], "body-md": ["Inter"], "label-lg": ["Inter"], "mono-metric": ["Inter"], "headline-xl-mobile": ["Inter"], "title-sm": ["Inter"], "body-sm": ["Inter"], "headline-sm": ["Inter"], "title-md": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"] }, fontSize: { "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "500" }], "mono-metric": ["15px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }], "headline-xl-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "title-sm": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col pt-safe pb-safe selection:bg-primary-fixed selection:text-on-primary-fixed"><main class="flex-1 flex flex-col w-full relative bg-surface"><div class="flex flex-col w-full px-margin pb-safe select-none">
+<!-- Subtle Ambient Glow Element for Immediate Success Feedback -->
+<div class="absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-72 bg-tertiary-fixed/30 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<!-- Top Navigation Header -->
+<div class="w-full pt-4 pb-1 flex items-center justify-between z-10">
+  <a href="dashboard.html" class="flex items-center gap-1.5 text-xs font-semibold text-secondary hover:text-on-surface bg-surface-container-low px-3 py-1.5 rounded-full shadow-sm transition-colors">
+    <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+    Dashboard
+  </a>
+  <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-tertiary bg-tertiary/10 px-2.5 py-1 rounded-full">
+    <span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-ping"></span>
+    Gate 02 Sync Active
+  </span>
+</div>
+<!-- Main Status & Identity Stack -->
+<div class="flex flex-col items-center text-center mt-space-md">
+<!-- Ultra-Readable Emerald Badge -->
+<div class="relative flex items-center justify-center mb-space-md">
+<div class="absolute inset-0 rounded-full bg-tertiary/10 animate-ping opacity-25"></div>
+<div class="relative w-28 h-28 rounded-full bg-tertiary-container/20 flex items-center justify-center shadow-lg shadow-tertiary/15">
+<div class="w-20 h-20 rounded-full bg-tertiary flex items-center justify-center text-on-tertiary shadow-md">
+<span class="material-symbols-outlined text-[52px] leading-none" style="font-variation-settings: 'FILL' 1, 'wght' 700;">check</span>
+</div>
+</div>
+</div>
+<!-- Binary Identity Verified Status -->
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md tracking-wider uppercase mb-space-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+      Identity Verified
+    </span>
+<!-- Candidate Photo & Direct Details -->
+<div class="flex items-center gap-3 bg-surface-container-low px-4 py-2.5 rounded-xl shadow-sm mb-space-sm">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high overflow-hidden shadow-sm flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Official high-resolution biometric identity passport photograph of an Indian candidate, sharp lighting against neutral studio backdrop, head and shoulders framing, clear direct gaze" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNrFIchATT4mfPwiyL20kGaKEiOQ-0IWa8p6y-ENscsIi_UadvABsmVGDuzpaNx1nONi9d4WL-wMxp4cVId0NDtWZyEKgMv0KjCpGM4fy5wF5Zw5dTLCBalmCQEMdpbHomnTF8msFYgfPJYRim85M0wpB9UHPTm2jPecfwOHd4R-qJgR6bGv3xPgszyueg9NYVP2sMwD1kQ9XLZ_mSJbCi1LJl1pEluS4Ctz3nrRMRAvXbeiVme61J"/>
+</div>
+<div class="text-left min-w-0">
+<h1 class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface uppercase tracking-tight truncate max-w-[240px]">
+          SUMAN K RATHOD
+        </h1>
+<p class="font-mono-metric text-mono-metric text-secondary tracking-widest uppercase">
+          2026-RPC-894102
+        </p>
+</div>
+</div>
+</div>
+<!-- Giant High-Contrast Transit Direction Block (Legible 4ft Away) -->
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-md p-space-md mt-space-xs text-center">
+<div class="flex items-center justify-center gap-1 text-primary mb-1">
+<span class="material-symbols-outlined text-title-md">arrow_forward</span>
+<span class="font-label-lg text-label-lg uppercase tracking-wider font-semibold">Proceed Directly To</span>
+</div>
+<!-- Room and Seat split cards for zero ambiguity -->
+<div class="grid grid-cols-2 gap-space-sm mt-space-xs">
+<div class="bg-surface-container py-3 px-2 rounded-lg shadow-sm flex flex-col items-center justify-center">
+<span class="font-label-sm text-label-sm uppercase text-secondary tracking-wider">Hall / Wing</span>
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold mt-0.5">ROOM 04</span>
+</div>
+<div class="bg-primary-fixed py-3 px-2 rounded-lg shadow-sm flex flex-col items-center justify-center">
+<span class="font-label-sm text-label-sm uppercase text-on-primary-fixed-variant tracking-wider">Allocated Desk</span>
+<span class="font-headline-lg text-headline-lg text-on-primary-fixed font-bold mt-0.5">SEAT 18</span>
+</div>
+</div>
+<!-- Secondary Meta (Floor & Gate info for rapid movement) -->
+<div class="mt-space-sm flex items-center justify-center gap-4 text-on-surface-variant font-label-md text-label-md">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">stairs</span> Ground Floor
+      </span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">door_front</span> West Corridor
+      </span>
+</div>
+</div>
+<!-- Fast-Track Operational Footprint -->
+<div class="w-full mt-space-lg flex flex-col items-center">
+<!-- Manual Next Candidate Trigger -->
+<button class="w-full h-12 bg-primary-container active:scale-[0.98] transition-transform text-on-primary rounded-xl font-title-md text-title-md shadow-lg shadow-primary-container/30 flex items-center justify-center gap-2 cursor-pointer" id="skipBtn">
+<span>Next Candidate</span>
+<span class="material-symbols-outlined text-title-md">arrow_forward_ios</span>
+</button>
+<!-- Secondary Links to Dashboard and Records -->
+<div class="flex items-center justify-center gap-6 mt-4">
+  <a href="dashboard.html" class="text-xs font-semibold text-secondary hover:text-primary transition-colors flex items-center gap-1">
+    <span class="material-symbols-outlined text-[16px]">dashboard</span> Dashboard
+  </a>
+  <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+  <a href="records_history.html" class="text-xs font-semibold text-secondary hover:text-primary transition-colors flex items-center gap-1">
+    <span class="material-symbols-outlined text-[16px]">receipt_long</span> Records
+  </a>
+</div>
+<!-- Auto-return Timer & Progress Indicator -->
+<div class="w-full mt-space-sm px-space-xs">
+<div class="flex items-center justify-between text-secondary font-label-sm text-label-sm mb-1">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+<span>Auto-returning to scan</span>
+</span>
+<span class="font-mono-metric font-semibold text-on-surface" id="countdownText">2.0s</span>
+</div>
+<!-- Subtle Progress Bar -->
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full transition-all ease-linear duration-100" id="countdownBar" style="width: 100%;"></div>
+</div>
+</div>
+</div>
+<!-- Interaction Logic for Live Countdown and Rapid Override -->
+<script>
+    (() => {
+      const TOTAL_MS = 2500;
+      const INTERVAL_MS = 50;
+      let remaining = TOTAL_MS;
+      
+      const bar = document.getElementById('countdownBar');
+      const text = document.getElementById('countdownText');
+      const skipBtn = document.getElementById('skipBtn');
+
+      function completeTransition() {
+        if (bar) bar.style.width = '0%';
+        if (text) text.textContent = '0.0s';
+        if (skipBtn) skipBtn.classList.add('opacity-75');
+        setTimeout(() => {
+          window.location.href = 'qr_scan.html';
+        }, 150);
+      }
+
+      const timer = setInterval(() => {
+        remaining -= INTERVAL_MS;
+        if (remaining <= 0) {
+          clearInterval(timer);
+          completeTransition();
+        } else {
+          if (bar) bar.style.width = ((remaining / TOTAL_MS) * 100) + '%';
+          if (text) text.textContent = (remaining / 1000).toFixed(1) + 's';
+        }
+      }, INTERVAL_MS);
+
+      if (skipBtn) {
+        skipBtn.addEventListener('click', () => {
+          clearInterval(timer);
+          window.location.href = 'qr_scan.html';
+        });
+      }
+    })();
+  </script>
+</div></main></body></html>

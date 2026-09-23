@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_stack" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#f9f9ff;}body{overscroll-behavior:none;font-family:'Inter',sans-serif;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary-container":"#d9dff5","primary-container":"#d97b29","on-primary-container":"#482100","surface-tint":"#934b00","surface-dim":"#d3daea","tertiary":"#006c4a","on-tertiary-container":"#003321","surface-container-high":"#e2e8f8","background":"#f9f9ff","tertiary-fixed":"#85f8c4","primary-fixed-dim":"#ffb782","on-surface-variant":"#554337","on-surface":"#151c27","surface-container":"#e7eefe","surface-variant":"#dce2f3","surface-container-low":"#f0f3ff","tertiary-fixed-dim":"#68dba9","error":"#ba1a1a","secondary-fixed":"#dce2f7","on-tertiary-fixed":"#002114","surface":"#f9f9ff","on-primary-fixed-variant":"#703800","error-container":"#ffdad6","outline-variant":"#dbc2b2","on-secondary-container":"#5c6274","on-error-container":"#93000a","on-tertiary":"#ffffff","secondary-fixed-dim":"#c0c6db","inverse-on-surface":"#ebf1ff","outline":"#887365","inverse-surface":"#2a313d","surface-container-lowest":"#ffffff","inverse-primary":"#ffb782","tertiary-container":"#29a678","on-error":"#ffffff","surface-bright":"#f9f9ff","secondary":"#575e70","on-tertiary-fixed-variant":"#005137","primary-fixed":"#ffdcc5","on-secondary":"#ffffff","on-primary":"#ffffff","on-secondary-fixed-variant":"#404758","surface-container-highest":"#dce2f3","primary":"#934b00","on-primary-fixed":"#301400","on-background":"#151c27","on-secondary-fixed":"#141b2b"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-sm":"0.5rem","space-lg":"1.5rem","space-md":"1rem","margin":"1rem","space-xs":"0.25rem","space-xl":"2rem","gutter":"1rem"},"fontFamily":{"headline-lg":["Inter"],"headline-md":["Inter"],"label-sm":["Inter"],"body-sm":["Inter"],"headline-xl-mobile":["Inter"],"headline-xl":["Inter"],"mono-metric":["Inter"],"body-lg":["Inter"],"title-sm":["Inter"],"headline-sm":["Inter"],"title-md":["Inter"],"label-lg":["Inter"],"body-md":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"600"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"headline-xl-mobile":["26px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-xl":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"mono-metric":["15px",{"lineHeight":"20px","letterSpacing":"0.05em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"title-sm":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"title-md":["16px",{"lineHeight":"22px","fontWeight":"600"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"500"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-space-md flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><button aria-label="Go back" class="w-11 h-11 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container active:scale-95 transition-colors cursor-pointer" onclick="window.location.href='dashboard.html'"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface truncate">Scan Verification</h1></div><div class="flex items-center gap-2 flex-shrink-0 pr-1"><button onclick="toggleTorch(this)" class="w-9 h-9 rounded-full bg-surface-container text-on-surface hover:bg-surface-container-high flex items-center justify-center transition-colors cursor-pointer" title="Toggle Torch"><span class="material-symbols-outlined text-[20px]">flash_on</span></button><span class="w-2.5 h-2.5 rounded-full bg-tertiary animate-pulse" title="System Live"></span></div></div></header><main class="flex-1 w-full bg-surface pt-16 pb-safe px-space-md flex flex-col"><div class="flex flex-col w-full pb-space-lg select-none">
+<!-- Top Operational Guidance Bar -->
+
+<!-- Camera Viewport Section -->
+<div class="relative w-full aspect-[4/3] max-h-72 rounded-xl overflow-hidden bg-inverse-surface shadow-md flex flex-col justify-between p-space-md">
+<!-- Camera Feed Mockup Background -->
+<div class="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-luminosity scale-105" data-alt="A blurred close-up view through a high-resolution camera of an institutional document with official stamps and QR code in soft exam hall lighting with amber accents" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC5nXkvoOxrLitAbhPYVPK9vc0Qrdt7XDOGBU0H5c0AQXv3a1nVbP5V_tW3w8d1u4_4ySJwkoHFNkLV0Q5tnZjeokbN3HpOqwSLLjlO8MPMN-MJIOqGjQThmbXsZt9ejw3tO09yT4ixT3asBQ3DOB8PMy30-ehgGMhqXIgE55UO39hG3OiLy654cmeFLC7Po8HhPzAIgDS_FzlY-VQ8wYfDcQwZ42qNavnb4tYqSs3jjI5ksY-5h0-W')">
+</div>
+<!-- Live Scanline Animation Effect -->
+<div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-80 animate-[bounce_3s_ease-in-out_infinite]"></div>
+<!-- Viewport Top Instruction & Controls -->
+
+<!-- Reticle Target Viewfinder -->
+<div class="relative z-10 self-center w-40 h-40 flex items-center justify-center">
+<!-- Reticle Corners via Absolute Positioning -->
+<div class="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary-container rounded-tl-lg"></div>
+<div class="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary-container rounded-tr-lg"></div>
+<div class="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary-container rounded-bl-lg"></div>
+<div class="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary-container rounded-br-lg"></div>
+<!-- Center Crosshair & Scanning Grid Indicator -->
+<div class="relative flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed-dim/70 text-[36px] animate-pulse">center_focus_weak</span>
+</div>
+</div>
+<!-- Viewport Bottom State Tag -->
+<div class="relative z-10 flex justify-center w-full">
+<span class="bg-inverse-surface/90 backdrop-blur-md text-tertiary-fixed font-mono-metric text-mono-metric px-space-sm py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+        QR DECODED: 2026-RPC-894102
+      </span>
+</div>
+</div>
+<!-- Bottom Sheet / Instant Lookup Result Container -->
+<div class="flex flex-col gap-space-sm mt-space-sm">
+<!-- Candidate Identity Card (Tier 1 Surface) -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<!-- Top Row: Avatar + Main Info -->
+<div class="flex items-start gap-space-md">
+<!-- Candidate Official Registration Photo -->
+<div class="relative flex-shrink-0 w-20 h-24 rounded-lg overflow-hidden bg-surface-container shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Official passport style portrait photo of a young South Asian woman in plain formal attire with neutral background for government examination registration" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXltbY-D8hmyCIrpDJs2IsTWhfFrnSf_nt0SziSji1vJPOSDrxIFFUv-htbVTYnPHPUj-ZLYL95IWk3QqxUgzl3jiQSHRBZMa0Ytpo-ETZEB4mH94uqb9EUpl2Ppr3TeE1fEneMtzz9kkbQxNym4ESiYX3-gnL-ZQMtpXEBEL10hUs8tcPjVFF_6_KBqXBCA0vG_trjcm43k7-QGwE8JRB6ALyjO4KOK-BVrsbl82wYDEZF6TInFia">
+<div class="absolute bottom-0 inset-x-0 bg-surface-container-highest/90 text-on-surface font-label-sm text-[10px] text-center py-0.5 uppercase tracking-tight">
+            Hall Admit
+          </div>
+</div>
+<!-- Identity & Allocation Details -->
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center justify-between gap-1 mb-1">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate tracking-tight">SUMAN K RATHOD</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm flex-shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+              QR Valid
+            </span>
+</div>
+<div class="flex items-center gap-1.5 mb-1.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Roll No:</span>
+<span class="font-mono-metric text-mono-metric text-primary-container tracking-wider font-semibold">2026-RPC-894102</span>
+</div>
+<div class="bg-surface-container-low px-2 py-1.5 rounded-lg flex flex-col gap-0.5">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">assignment_ind</span>
+<span class="font-title-sm text-title-sm text-on-surface truncate">Civil Police Constable - RPC 2026</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">location_on</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Govt SHVNM Girls PU College (AN0081)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Desk / Seat Badges Strip -->
+<div class="grid grid-cols-2 gap-space-xs pt-space-xs">
+<div class="flex items-center justify-between px-space-sm py-2 rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Allotted Room</span>
+<span class="font-title-md text-title-md text-on-surface">Room 04</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-2 rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Desk Number</span>
+<span class="font-title-md text-title-md text-primary-container">Seat 18</span>
+</div>
+</div>
+</div>
+<!-- Verification Next Step Action Card -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<!-- Step Guidance Indicator -->
+
+<!-- Action Buttons Container (Thumb Zone) -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<!-- Big Primary Action Button (Saffron Accent) -->
+<button class="w-full h-12 rounded-xl bg-primary-container text-on-primary flex items-center justify-center gap-2 shadow-lg shadow-primary-container/20 active:scale-[0.98] transition-all font-title-sm text-title-sm cursor-pointer" id="capture-trigger-btn" onclick="triggerLiveCapture(this)">
+<span class="material-symbols-outlined text-[20px]">photo_camera</span>
+<span class="">Capture Live Photo &amp; Auto-Verify</span>
+</button>
+<!-- Secondary Action: Manual Biometric / Verifier Override -->
+<button class="w-full rounded-xl bg-surface-container text-on-surface flex items-center justify-center gap-2 active:bg-surface-container-high transition-colors font-title-sm text-title-sm h-12 cursor-pointer" id="manual-override-btn" onclick="window.location.href='manual_verification.html'">
+<span class="material-symbols-outlined text-[18px] text-secondary">fingerprint</span>
+<span class="">Manual Biometric / Verifier Override</span>
+</button>
+</div>
+
+</div>
+</div>
+<!-- Micro-interaction script -->
+<script>
+    function toggleTorch(btn) {
+      const icon = btn.querySelector('.material-symbols-outlined');
+      if (icon.innerText === 'flash_on') {
+        icon.innerText = 'flash_off';
+        btn.classList.add('bg-primary-container', 'text-white');
+        btn.classList.remove('bg-surface-container', 'text-on-surface');
+      } else {
+        icon.innerText = 'flash_on';
+        btn.classList.remove('bg-primary-container', 'text-white');
+        btn.classList.add('bg-surface-container', 'text-on-surface');
+      }
+    }
+
+    function triggerLiveCapture(btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span><span>Processing AI Face Vector...</span>`;
+      btn.classList.add('opacity-90');
+      setTimeout(() => {
+        btn.innerHTML = `<span class="material-symbols-outlined text-[20px]">check</span><span>Matched &amp; Verified (99.4%)</span>`;
+        btn.classList.remove('bg-primary-container', 'opacity-90');
+        btn.classList.add('bg-tertiary', 'text-on-tertiary');
+        setTimeout(() => {
+          window.location.href = 'verification_complete.html';
+        }, 700);
+      }, 1000);
+    }
+  </script>
+</div></main>
+
+</body></html>
