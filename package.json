@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit",
     "check": "node scripts/check-contract.mjs && tsc --noEmit",
     "test:qr": "node scripts/qr-decode-selftest.mjs",
-    "build": "expo export -p web",
-    "build:web": "expo export -p web",
+    "build": "expo export -p web && node scripts/post-build.cjs",
+    "build:web": "expo export -p web && node scripts/post-build.cjs",
     "lint": "expo lint"
   },
   "dependencies": {
