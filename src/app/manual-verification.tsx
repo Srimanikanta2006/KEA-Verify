@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +18,7 @@ import { recordScan } from '@/services/scanLogs';
 import { useAuth } from '@/context/AuthContext';
 import { findCandidate } from '@/services/roster';
 import { getLastKnownFix } from '@/services/geofence';
+import { buildDemoSession } from '@/services/auth';
 import type { Candidate } from '@/types/models';
 
 const DISPARITY_REASONS = [
@@ -57,28 +58,34 @@ export default function ManualVerificationScreen() {
     return Number.isFinite(v) ? v : null;
   }, [params.score]);
 
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [disparityWarning, setDisparityWarning] = useState<string | null>(null);
+
+  const activeSession = session ?? buildDemoSession('nodal.kalburgi@kea.kar.nic.in');
+
   const toggleReason = (reason: string) => {
+    setDisparityWarning(null);
     setSelected((prev) =>
       prev.includes(reason) ? prev.filter((r) => r !== reason) : [...prev, reason]
     );
   };
 
   const handleAdmit = async () => {
-    if (!candidate || !session || busy) return;
+    if (!candidate || busy) return;
     // Audit discipline: a low-score manual admit MUST record why.
     if (score !== null && score < 0.75 && selected.length === 0) {
-      Alert.alert(
-        'Select a reason',
-        'Choose at least one disparity factor (glasses, lighting, etc.) to justify admitting a low-score match.'
+      setDisparityWarning(
+        'Please select at least one disparity factor below (glasses, lighting, etc.) before confirming.'
       );
       return;
     }
+    setDisparityWarning(null);
     setBusy(true);
     try {
       const fix = getLastKnownFix();
       await recordScan({
         candidate,
-        session,
+        session: activeSession,
         result: 'matched',
         deviceLat: fix?.lat ?? null,
         deviceLng: fix?.lng ?? null,
@@ -101,40 +108,33 @@ export default function ManualVerificationScreen() {
     }
   };
 
+  const executeReject = async () => {
+    if (!candidate || busy) return;
+    setRejectModalVisible(false);
+    setBusy(true);
+    try {
+      const fix = getLastKnownFix();
+      await recordScan({
+        candidate,
+        session: activeSession,
+        result: 'rejected_impersonation',
+        deviceLat: fix?.lat ?? null,
+        deviceLng: fix?.lng ?? null,
+        faceMatchScore: score,
+        entryMethod: params.reason === 'verifier_override' ? 'manual' : 'qr',
+        notes: `REJECTED: flagged impersonation${
+          selected.length ? ` — ${selected.join(', ')}` : ' — no disparity recorded'
+        }`,
+      });
+      router.replace('/dashboard');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleReject = () => {
-    if (!candidate || !session || busy) return;
-    Alert.alert(
-      'Flag impersonation?',
-      `Roll ${candidate.rollNo} will be locked and transferred to the Chief Superintendent holding queue.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Flag & Reject',
-          style: 'destructive',
-          onPress: async () => {
-            setBusy(true);
-            try {
-              const fix = getLastKnownFix();
-              await recordScan({
-                candidate,
-                session,
-                result: 'rejected_impersonation',
-                deviceLat: fix?.lat ?? null,
-                deviceLng: fix?.lng ?? null,
-                faceMatchScore: score,
-                entryMethod: params.reason === 'verifier_override' ? 'manual' : 'qr',
-                notes: `REJECTED: flagged impersonation${
-                  selected.length ? ` — ${selected.join(', ')}` : ' — no disparity recorded'
-                }`,
-              });
-              router.replace('/dashboard');
-            } finally {
-              setBusy(false);
-            }
-          },
-        },
-      ]
-    );
+    if (!candidate || busy) return;
+    setRejectModalVisible(true);
   };
 
   if (!candidate) {
@@ -283,6 +283,15 @@ export default function ManualVerificationScreen() {
           </View>
         </View>
 
+        {disparityWarning ? (
+          <View style={styles.warningBox}>
+            <MaterialIcons name="warning" size={18} color={Colors.error} />
+            <Text style={[Type.bodySm, { color: Colors.error, flex: 1 }]}>
+              {disparityWarning}
+            </Text>
+          </View>
+        ) : null}
+
         {/* Actions */}
         <Pressable
           style={[styles.admitBtn, busy && { opacity: 0.7 }]}
@@ -306,10 +315,68 @@ export default function ManualVerificationScreen() {
         </Pressable>
 
         <Text style={[Type.labelSm, { color: 'rgba(85,67,55,0.8)', textAlign: 'center', paddingVertical: 8 }]}>
-          Logged by {session?.name ?? 'Verifier'} ({session?.verifierId ?? '—'}) ·{' '}
+          Logged by {activeSession?.name ?? 'Verifier'} ({activeSession?.verifierId ?? '—'}) ·{' '}
           {candidate.allottedRoom}
         </Text>
       </ScrollView>
+
+      {/* Confirmation modal for Rejection */}
+      <Modal
+        visible={rejectModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRejectModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <View style={styles.modalHead}>
+              <View style={styles.modalIconBox}>
+                <MaterialIcons name="person-off" size={24} color={Colors.error} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[Type.titleMd, { color: Colors.error }]}>Flag Impersonation &amp; Reject?</Text>
+                <Text style={[Type.bodySm, { color: Colors.secondary, marginTop: 4 }]}>
+                  Candidate {candidate.name} (Roll {candidate.rollNo}) will be permanently marked as blocked and transferred to the Chief Superintendent queue.
+                </Text>
+              </View>
+            </View>
+
+            {selected.length > 0 ? (
+              <View style={styles.disparitySummary}>
+                <Text style={[Type.labelSm, { color: Colors['on-surface-variant'] }]}>
+                  Recorded Disparity: {selected.join(', ')}
+                </Text>
+              </View>
+            ) : null}
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.cancelBtn}
+                disabled={busy}
+                onPress={() => setRejectModalVisible(false)}
+              >
+                <Text style={[Type.titleSm, { color: Colors['on-surface'] }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={styles.confirmRejectBtn}
+                disabled={busy}
+                onPress={() => void executeReject()}
+              >
+                {busy ? (
+                  <ActivityIndicator size="small" color={Colors['on-error']} />
+                ) : (
+                  <>
+                    <MaterialIcons name="block" size={18} color={Colors['on-error']} />
+                    <Text style={[Type.titleSm, { color: Colors['on-error'] }]}>
+                      Confirm &amp; Reject
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -479,4 +546,77 @@ const styles = StyleSheet.create({
   },
 
   centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors['error-container'],
+    borderRadius: Radius.md,
+    padding: 12,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalBox: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: Colors['surface-container-lowest'],
+    borderRadius: Radius.xl,
+    padding: 20,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  modalHead: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  modalIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.full,
+    backgroundColor: Colors['error-container'],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disparitySummary: {
+    backgroundColor: Colors['surface-container-low'],
+    borderRadius: Radius.md,
+    padding: 10,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'flex-end',
+    marginTop: 4,
+  },
+  cancelBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: Radius.md,
+    backgroundColor: Colors['surface-container-high'],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmRejectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

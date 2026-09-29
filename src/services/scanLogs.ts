@@ -26,6 +26,24 @@ import type { Candidate, ScanLog, ScanResult, VerifierSession } from '@/types/mo
 const MIRROR_KEY = 'kea_scanlog_mirror_v1';
 const MIRROR_CAP = 500;
 
+type ScanLogListener = () => void;
+const logListeners = new Set<ScanLogListener>();
+
+export function subscribeScanLogs(listener: ScanLogListener): () => void {
+  logListeners.add(listener);
+  return () => {
+    logListeners.delete(listener);
+  };
+}
+
+export function notifyScanLogsChanged(): void {
+  for (const listener of logListeners) {
+    try {
+      listener();
+    } catch {}
+  }
+}
+
 export interface RecordScanInput {
   candidate: Pick<Candidate, 'candidateId' | 'rollNo'>;
   session: VerifierSession;
@@ -89,6 +107,7 @@ export async function recordScan(input: RecordScanInput): Promise<ScanLog> {
   const mirror = await readMirror();
   mirror.push(log);
   await writeMirror(mirror);
+  notifyScanLogsChanged();
 
   // Feature 6: bump the sync UI + attempt immediate push when online.
   if (log.pendingSync !== false) {

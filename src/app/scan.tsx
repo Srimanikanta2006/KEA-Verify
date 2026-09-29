@@ -907,6 +907,21 @@ function FoundCard({
               Manual Biometric / Verifier Override
             </Text>
           </Pressable>
+          <Pressable
+            style={styles.rejectAction}
+            disabled={capturing}
+            onPress={() =>
+              router.push({
+                pathname: '/manual-verification',
+                params: { candidateId: candidate.candidateId, reason: 'verifier_flag' },
+              })
+            }
+          >
+            <MaterialIcons name="person-off" size={18} color={Colors.error} />
+            <Text style={[Type.titleSm, { color: Colors.error }]}>
+              Reject / Flag Impersonation
+            </Text>
+          </Pressable>
           {captureError ? (
             <Text style={[Type.labelSm, { color: Colors.error, textAlign: 'center' }]}>
               Capture failed — check camera permission, or use Manual Override.
@@ -1240,6 +1255,15 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: Radius.xl,
     backgroundColor: Colors['surface-container'],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  rejectAction: {
+    height: 44,
+    borderRadius: Radius.xl,
+    backgroundColor: Colors['error-container'],
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

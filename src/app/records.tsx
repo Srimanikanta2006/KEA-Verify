@@ -2,7 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { getAllCandidates } from '@/services/roster';
-import { getAllLocalLogs } from '@/services/scanLogs';
+import { getAllLocalLogs, subscribeScanLogs } from '@/services/scanLogs';
 import { SyncBanner } from '@/components/SyncBanner';
 import type { Candidate, ScanLog } from '@/types/models';
 
@@ -68,18 +68,33 @@ export default function RecordsScreen() {
     }
   }, [session, router]);
 
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
+  const reloadData = useCallback(async () => {
+    try {
       const [c, l] = await Promise.all([getAllCandidates(), getAllLocalLogs()]);
-      if (!alive) return;
       setCandidates(c);
       setLogs(l);
-    })();
-    return () => {
-      alive = false;
-    };
+    } catch {}
   }, []);
+
+  useEffect(() => {
+    void reloadData();
+    const unsub = subscribeScanLogs(() => {
+      void reloadData();
+    });
+    const interval = setInterval(() => {
+      void reloadData();
+    }, 2000);
+    return () => {
+      unsub();
+      clearInterval(interval);
+    };
+  }, [reloadData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reloadData();
+    }, [reloadData])
+  );
 
   const centreRoster = useMemo(
     () => candidates.filter((x) => x.allottedCentreId === session?.assignedCentreId),

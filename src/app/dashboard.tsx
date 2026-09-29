@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Image,
@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { getAllCandidates } from '@/services/roster';
-import { getAllLocalLogs } from '@/services/scanLogs';
+import { getAllLocalLogs, subscribeScanLogs } from '@/services/scanLogs';
 import { SyncBanner } from '@/components/SyncBanner';
 import { runSyncNow, useSyncStatus } from '@/services/syncManager';
 import type { Candidate, ScanLog } from '@/types/models';
@@ -87,7 +87,28 @@ export default function DashboardScreen() {
       return;
     }
     void loadRoster();
+
+    // Auto-update smoothly when any scan is recorded anywhere in the app
+    const unsub = subscribeScanLogs(() => {
+      void loadRoster();
+    });
+
+    // Light 2-second background refresh to keep turnout stats live
+    const interval = setInterval(() => {
+      void loadRoster();
+    }, 2000);
+
+    return () => {
+      unsub();
+      clearInterval(interval);
+    };
   }, [session, router, loadRoster]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadRoster();
+    }, [loadRoster])
+  );
 
   const stats = useMemo(() => {
     const centreRoster = candidates.filter(
