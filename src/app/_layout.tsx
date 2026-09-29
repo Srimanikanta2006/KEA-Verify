@@ -48,24 +48,20 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 
 function RouteGate() {
   const { status } = useAuth();
-  const [fontsLoaded] = useFonts({
-    material: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'),
-    MaterialIcons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'),
-  });
+  const [fontsLoaded] = useFonts(
+    Platform.OS === 'web'
+      ? {}
+      : {
+          material: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'),
+          MaterialIcons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'),
+        }
+  );
 
   useEffect(() => {
-    if (status !== 'loading' && fontsLoaded) {
+    if (status !== 'loading') {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [status, fontsLoaded]);
-
-  if (!fontsLoaded) {
-    return (
-      <View style={{ flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
+  }, [status]);
 
   return (
     <Stack
