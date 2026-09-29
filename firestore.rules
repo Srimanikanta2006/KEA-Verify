@@ -1,0 +1,50 @@
+rules_version = '2';
+
+// KEA Verify — free-tier Firebase security rules.
+// Verifiers may read centres/verifiers/candidates; scans are append-only.
+// Admin (seeding / roster management) is limited to the admin UID(s) listed below.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        request.auth.uid in ['PASTE-YOUR-FIREBASE-ADMIN-UID-HERE'];
+    }
+
+    // Centre + verifier directories: readable by any signed-in verifier.
+    match /centres/{centreId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /verifiers/{email} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Candidate roster: readable offline-cache copy by signed-in verifiers.
+    match /candidates/{candidateId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Audit trail: append-only for signed-in verifiers. All signed-in verifiers
+    // can READ so the duplicate-check query works across devices/gates. Logs
+    // contain no PII beyond names/verifier codes; tighten per-centre before prod.
+    match /scanLogs/{scanId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll(
+          ['candidateId', 'verifierId', 'timestamp', 'result']
+        )
+        && request.resource.data.result in
+          ['matched', 'manual_review', 'rejected_centre_mismatch', 'rejected_duplicate', 'rejected_impersonation'];
+      allow read: if signedIn();
+      allow update, delete: if false;
+    }
+  }
+}

@@ -1,24 +1,83 @@
-# KEA Verify Mobile Web App
+# KEA Verify — Exam Centre Face Verification App
 
-A high-performance, mobile-first verification and attendance system built for **Karnataka Examination Authority (KEA)** exam invigilators and center coordinators.
+React Native (Expo SDK 57) rebuild of the approved Stitch designs for the
+**Karnataka Examinations Authority** invigilator app. The `*.html` files at the
+repo root are the finalized mockups kept as reference — the screens are
+recreated 1:1 in `src/app/` and wired to real functionality.
 
-## 🚀 Key Features
-- **Invigilator Authentication**: Secure MPIN and role-based login with Nodal Center support modal and captcha validation.
-- **Operational Dashboard**: Real-time center turnout metrics, hall filters, instant stat cards, and candidate queue management.
-- **Biometric QR & Face Matching**: Camera viewfinder simulation with simulated biometric match and manual override triggers.
-- **Disparity Audit (Manual Verification)**: Visual comparison of admit card photo vs. live capture, disparity chips, and approval/flag workflow.
-- **Admit Pass & Desk Direction**: High-contrast, clear room & seat allocation with auto-return transition.
-- **Real-Time Audit Records**: Fast search across candidate names, roll numbers, and seat codes with tab filters and CSV export.
+**Stack:** Expo + TypeScript + Expo Router · Firebase (Auth/Firestore, free Spark tier) · Google oAuth via `@react-native-google-signin/google-signin` · AsyncStorage.
 
-## 📱 Tech Stack
-- HTML5 & Vanilla JavaScript
-- Modern responsive layout styled with Tailwind CSS tokens
-- Material Symbols & Google Fonts (Inter)
-- Optimized for mobile web browsers and Vercel edge deployment
+## Feature roadmap (build order)
 
-## 🌐 Local Development
-To run locally:
+| # | Feature | Status |
+|---|---------|--------|
+| 1 | Auth + backend foundation (Google oAuth, verifier→centre session, seeded demo data) | ✅ this drop |
+| 2 | Real QR scan → candidate lookup (expo-camera, offline-first lookup) | ✅ this drop |
+| 3 | Geofencing (device location vs centre, gate before lookup + demo override) | ✅ this drop |
+| 4 | Centre-mismatch + duplicate-scan logic (local-first scanLogs, audit every outcome) | ✅ this drop |
+| 5 | Face detection + matching (on-device ML Kit + MobileFaceNet, manual-confirm fallback) | ✅ this drop |
+| 6 | Offline queue + sync resilience (NetInfo auto-sync, Offline Cache Ready UI) | ✅ this drop |
+
+## Run it
+
 ```bash
-python -m http.server 8080
+npm install
+npm run typecheck   # verify the tree compiles
+npm start           # press a → android emulator, or scan QR with Expo Go*
 ```
-Open `http://localhost:8080` in your mobile or desktop browser.
+
+\* Google Sign-In needs a **development build** (`npx expo run:android`) because
+it includes native code; Demo Mode works everywhere, including Expo Go.
+
+## Firebase setup (free, no credit card)
+
+1. Create a project at console.firebase.google.com (Spark plan).
+2. **Authentication → Sign-in method → enable Google.** Add your Android SHA-1
+   (from `cd android && ./gradlew signingReport` after `npx expo prebuild`, or
+   `npx expo credentials` via EAS) plus the support email.
+3. **Firestore → Create database** (production mode).
+4. Copy `.env.example` → `.env` and paste the web API config values
+   (Project settings → General → SDK setup).
+5. Google Cloud console → APIs & Services → Credentials → copy the
+   **Web client ID** (auto-created by Firebase for Google Sign-In) into
+   `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
+6. Paste the verifiers' Google emails into `scripts/seed-firebase.mjs`
+   (search for `authProviderId`) — the app looks verifiers up by email.
+7. Publish `firestore.rules` in Firestore → Rules, replacing the admin UID
+   placeholder with your own (create any email/password test user in Auth and
+   copy its UID).
+8. Seed: either set `FIREBASE_SERVICE_ACCOUNT` to the service-account JSON, or
+   create a password test user and run:
+   ```bash
+   FIREBASE_API_KEY=... FIREBASE_AUTH_EMAIL=you@test.com \
+   FIREBASE_AUTH_PASSWORD=... npm run seed
+   ```
+   → writes 3 centres, 3 verifiers, 24 candidates.
+
+## Scaling story (Feature 6 talking points for judges)
+
+- **Stateless clients, thin backend**: all matching runs on-device (TFLite + ML Kit); the backend is just Firestore reads/writes. No GPU servers, no per-scan API calls. Cost stays at $0 and latency stays flat under load.
+- **Offline-first writes**: scans append to a local queue (AsyncStorage mirror) and sync idempotently (`scanLogs/{clientScanId}` — client UUIDs make retries safe). Wifi dropping mid-demo loses nothing.
+- **Indexed lookups**: candidate lookup hits one indexed doc (`candidates/{candidateId}`); duplicate checks query `scanLogs` by `candidateId` equality — add a composite index `(candidateId, timestamp)` at scale. Statewide load = 5 lakh scans/day is trivial doc-GET traffic for Firestore's model.
+- **Read-path sharding by centre**: every verifier only ever reads their centre's roster (`candidates` where `allottedCentreId == X`), so hot reads are naturally partitioned per centre; a statewide write storm on result day touches disjoint documents.
+- **Next step if deployed**: move duplicate-check + attendance writes behind a Cloud Function (transactional per candidate) once budgets allow; the client contract stays identical.
+
+## Demo Mode (no keys needed)
+
+On the login screen tap **Continue in Demo Mode** — signs in as the first
+bundled verifier (AN0081) with the full offline roster. Good for UI checks and
+emulator screenshots; real auth requires the Firebase setup above.
+
+## Project layout
+
+```
+src/app/          Expo Router screens (login, dashboard, scan)
+src/components/   shared UI
+src/config/       Firebase init (env-driven)
+src/context/      AuthProvider (persisted session)
+src/services/     auth, session, roster (Firestore + offline cache), demo data
+src/types/        shared data model (centres, verifiers, candidates, scanLogs)
+scripts/          seed-firebase.mjs
+firestore.rules   security rules
+*.html            approved Stitch mockups (reference only)
+```
