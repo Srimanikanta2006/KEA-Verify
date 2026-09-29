@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KEA Verify — Test Hall Ticket QR Codes</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #f9f9ff; }
@@ -21,7 +20,7 @@
           <span class="text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Feature 2 Test Bench</span>
         </div>
         <h1 class="text-2xl font-bold tracking-tight text-slate-900 mt-2">KEA Verify — Candidate QR Test Bench</h1>
-        <p class="text-sm text-slate-500 mt-1">Point your phone's camera running the KEA Verify app at any QR code below to test instant candidate lookup.</p>
+        <p class="text-sm text-slate-500 mt-1">Point your camera running the KEA Verify app at any QR code below to test instant candidate lookup.</p>
       </div>
       <div class="flex items-center gap-3">
         <span class="text-xs font-medium text-slate-400">Centre:</span>
@@ -36,145 +35,168 @@
         <span class="text-xs font-normal text-slate-500">(Will trigger Candidate Found card)</span>
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="candidateList">
-        <!-- Rendered by JS -->
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center space-y-3">
+        <div class="w-full text-left border-b border-slate-100 pb-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-orange-600 tracking-wider">Room 01</span>
+            <span class="text-[11px] font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-semibold">KAR-24-91000</span>
+          </div>
+          <h3 class="font-bold text-slate-800 text-base mt-1 truncate">ANANYA SHETTY</h3>
+        </div>
+
+        <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-inner my-2 flex items-center justify-center">
+          <img src="data:image/png;base64,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" alt="QR Code for ANANYA SHETTY" class="w-48 h-48 block object-contain" />
+        </div>
+
+        <div class="w-full text-left bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span class="text-[10px] text-slate-400 font-mono block uppercase">Raw QR Payload:</span>
+          <code class="text-[11px] text-slate-700 font-mono break-all leading-tight select-all">KEA|KAR-24-91000|Civil Police Constable - RPC 2026|centre_an0081|Room 01</code>
+        </div>
+      </div>
+  
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center space-y-3">
+        <div class="w-full text-left border-b border-slate-100 pb-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-orange-600 tracking-wider">Room 02</span>
+            <span class="text-[11px] font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-semibold">KAR-24-91137</span>
+          </div>
+          <h3 class="font-bold text-slate-800 text-base mt-1 truncate">MOHAMMED ZEYAN</h3>
+        </div>
+
+        <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-inner my-2 flex items-center justify-center">
+          <img src="data:image/png;base64,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" alt="QR Code for MOHAMMED ZEYAN" class="w-48 h-48 block object-contain" />
+        </div>
+
+        <div class="w-full text-left bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span class="text-[10px] text-slate-400 font-mono block uppercase">Raw QR Payload:</span>
+          <code class="text-[11px] text-slate-700 font-mono break-all leading-tight select-all">KEA|KAR-24-91137|Civil Police Constable - RPC 2026|centre_an0081|Room 02</code>
+        </div>
+      </div>
+  
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center space-y-3">
+        <div class="w-full text-left border-b border-slate-100 pb-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-orange-600 tracking-wider">Room 03</span>
+            <span class="text-[11px] font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-semibold">KAR-24-91274</span>
+          </div>
+          <h3 class="font-bold text-slate-800 text-base mt-1 truncate">PRIYANKA K. V.</h3>
+        </div>
+
+        <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-inner my-2 flex items-center justify-center">
+          <img src="data:image/png;base64,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" alt="QR Code for PRIYANKA K. V." class="w-48 h-48 block object-contain" />
+        </div>
+
+        <div class="w-full text-left bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span class="text-[10px] text-slate-400 font-mono block uppercase">Raw QR Payload:</span>
+          <code class="text-[11px] text-slate-700 font-mono break-all leading-tight select-all">KEA|KAR-24-91274|Civil Police Constable - RPC 2026|centre_an0081|Room 03</code>
+        </div>
+      </div>
+  
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center space-y-3">
+        <div class="w-full text-left border-b border-slate-100 pb-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-orange-600 tracking-wider">Room 04</span>
+            <span class="text-[11px] font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-semibold">KAR-24-91411</span>
+          </div>
+          <h3 class="font-bold text-slate-800 text-base mt-1 truncate">RAHUL GOWDA</h3>
+        </div>
+
+        <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-inner my-2 flex items-center justify-center">
+          <img src="data:image/png;base64,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" alt="QR Code for RAHUL GOWDA" class="w-48 h-48 block object-contain" />
+        </div>
+
+        <div class="w-full text-left bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span class="text-[10px] text-slate-400 font-mono block uppercase">Raw QR Payload:</span>
+          <code class="text-[11px] text-slate-700 font-mono break-all leading-tight select-all">KEA|KAR-24-91411|Civil Police Constable - RPC 2026|centre_an0081|Room 04</code>
+        </div>
+      </div>
+  
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center space-y-3">
+        <div class="w-full text-left border-b border-slate-100 pb-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-orange-600 tracking-wider">Room 05</span>
+            <span class="text-[11px] font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-semibold">KAR-24-91548</span>
+          </div>
+          <h3 class="font-bold text-slate-800 text-base mt-1 truncate">SNEHA HEGDE</h3>
+        </div>
+
+        <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-inner my-2 flex items-center justify-center">
+          <img src="data:image/png;base64,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" alt="QR Code for SNEHA HEGDE" class="w-48 h-48 block object-contain" />
+        </div>
+
+        <div class="w-full text-left bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span class="text-[10px] text-slate-400 font-mono block uppercase">Raw QR Payload:</span>
+          <code class="text-[11px] text-slate-700 font-mono break-all leading-tight select-all">KEA|KAR-24-91548|Civil Police Constable - RPC 2026|centre_an0081|Room 05</code>
+        </div>
+      </div>
+  
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center space-y-3">
+        <div class="w-full text-left border-b border-slate-100 pb-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-orange-600 tracking-wider">Room 06</span>
+            <span class="text-[11px] font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-semibold">KAR-24-91685</span>
+          </div>
+          <h3 class="font-bold text-slate-800 text-base mt-1 truncate">KARTHIK RAO</h3>
+        </div>
+
+        <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-inner my-2 flex items-center justify-center">
+          <img src="data:image/png;base64,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" alt="QR Code for KARTHIK RAO" class="w-48 h-48 block object-contain" />
+        </div>
+
+        <div class="w-full text-left bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+          <span class="text-[10px] text-slate-400 font-mono block uppercase">Raw QR Payload:</span>
+          <code class="text-[11px] text-slate-700 font-mono break-all leading-tight select-all">KEA|KAR-24-91685|Civil Police Constable - RPC 2026|centre_an0081|Room 06</code>
+        </div>
+      </div>
+  
       </div>
     </div>
 
-    <!-- Invalid Test Cases -->
+    <!-- Negative / Error Test Cases -->
     <div class="pt-6 border-t border-slate-200">
       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
         <span>Negative / Error Test Cases</span>
         <span class="text-xs font-normal text-slate-500">(Will trigger "QR Not Found" error card)</span>
       </h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="invalidList">
-        <!-- Rendered by JS -->
-      </div>
-    </div>
-  </div>
 
-  <script>
-    const validCandidates = [
-      {
-        name: "ANANYA SHETTY",
-        rollNo: "KAR-24-91000",
-        room: "Room 01",
-        exam: "Civil Police Constable - RPC 2026",
-        centreId: "centre_an0081"
-      },
-      {
-        name: "MOHAMMED ZEYAN",
-        rollNo: "KAR-24-91137",
-        room: "Room 02",
-        exam: "Civil Police Constable - RPC 2026",
-        centreId: "centre_an0081"
-      },
-      {
-        name: "PRIYANKA K. V.",
-        rollNo: "KAR-24-91274",
-        room: "Room 03",
-        exam: "Civil Police Constable - RPC 2026",
-        centreId: "centre_an0081"
-      },
-      {
-        name: "RAHUL GOWDA",
-        rollNo: "KAR-24-91411",
-        room: "Room 04",
-        exam: "Civil Police Constable - RPC 2026",
-        centreId: "centre_an0081"
-      },
-      {
-        name: "SNEHA HEGDE",
-        rollNo: "KAR-24-91548",
-        room: "Room 05",
-        exam: "Civil Police Constable - RPC 2026",
-        centreId: "centre_an0081"
-      },
-      {
-        name: "KARTHIK RAO",
-        rollNo: "KAR-24-91685",
-        room: "Room 06",
-        exam: "Civil Police Constable - RPC 2026",
-        centreId: "centre_an0081"
-      }
-    ];
-
-    const invalidTests = [
-      {
-        title: "Non-Existent Roll Number",
-        desc: "Proper KEA format, but roll number is not in Firestore or offline roster.",
-        payload: "KEA|KAR-24-99999|Civil Police Constable - RPC 2026|centre_an0081|Room 99"
-      },
-      {
-        title: "Random Non-KEA QR Code",
-        desc: "Standard website URL (e.g. google.com).",
-        payload: "https://google.com"
-      }
-    ];
-
-    const container = document.getElementById('candidateList');
-    validCandidates.forEach((c, idx) => {
-      const payload = `KEA|${c.rollNo}|${c.exam}|${c.centreId}|${c.room}`;
-      const canvasId = `qr-canvas-${idx}`;
-      
-      const card = document.createElement('div');
-      card.className = "bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center space-y-3";
-      card.innerHTML = `
-        <div class="w-full text-left border-b border-slate-100 pb-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-orange-600 tracking-wider">${c.room}</span>
-            <span class="text-[11px] font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-semibold">${c.rollNo}</span>
-          </div>
-          <h3 class="font-bold text-slate-800 text-base mt-1 truncate">${c.name}</h3>
-        </div>
-
-        <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-inner my-2 flex items-center justify-center">
-          <canvas id="${canvasId}" class="w-48 h-48"></canvas>
-        </div>
-
-        <div class="w-full text-left bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-          <span class="text-[10px] text-slate-400 font-mono block uppercase">Raw QR Payload:</span>
-          <code class="text-[11px] text-slate-700 font-mono break-all leading-tight select-all">${payload}</code>
-        </div>
-      `;
-      container.appendChild(card);
-
-      setTimeout(() => {
-        QRCode.toCanvas(document.getElementById(canvasId), payload, {
-          width: 190,
-          margin: 1,
-          color: { dark: '#151c27', light: '#ffffff' }
-        });
-      }, 50);
-    });
-
-    const invalidContainer = document.getElementById('invalidList');
-    invalidTests.forEach((t, idx) => {
-      const canvasId = `qr-invalid-${idx}`;
-      const card = document.createElement('div');
-      card.className = "bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex flex-col md:flex-row items-center gap-5";
-      card.innerHTML = `
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex flex-col md:flex-row items-center gap-5">
         <div class="p-2 bg-white border border-slate-200 rounded-xl flex-shrink-0">
-          <canvas id="${canvasId}" class="w-36 h-36"></canvas>
+          <img src="data:image/png;base64,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" alt="QR Code for Non-Existent Roll Number" class="w-36 h-36 block object-contain" />
         </div>
         <div class="text-left space-y-2 flex-1">
           <span class="text-xs font-bold text-rose-600 uppercase tracking-wide bg-rose-50 px-2 py-0.5 rounded">Error Test</span>
-          <h3 class="font-bold text-slate-800 text-base">${t.title}</h3>
-          <p class="text-xs text-slate-500">${t.desc}</p>
+          <h3 class="font-bold text-slate-800 text-base">Non-Existent Roll Number</h3>
+          <p class="text-xs text-slate-500">Proper KEA format, but roll number is not in Firestore or offline roster.</p>
           <div class="bg-slate-50 p-2 rounded border border-slate-100">
-            <code class="text-[11px] text-slate-700 font-mono break-all select-all">${t.payload}</code>
+            <code class="text-[11px] text-slate-700 font-mono break-all select-all">KEA|KAR-24-99999|Civil Police Constable - RPC 2026|centre_an0081|Room 99</code>
           </div>
         </div>
-      `;
-      invalidContainer.appendChild(card);
+      </div>
+  
 
-      setTimeout(() => {
-        QRCode.toCanvas(document.getElementById(canvasId), t.payload, {
-          width: 140,
-          margin: 1,
-          color: { dark: '#ba1a1a', light: '#ffffff' }
-        });
-      }, 50);
-    });
-  </script>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex flex-col md:flex-row items-center gap-5">
+        <div class="p-2 bg-white border border-slate-200 rounded-xl flex-shrink-0">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAAAklEQVR4AewaftIAAATqSURBVO3BwXEjVxBEwccOeFH2tNVtT9lB8aTTfIUGgQXJ3sr8+PxCxBJFxCJFxCJFxCJFxCJFxCJFxCIP/sNI/FZt8y4j8Uptc9dIXGmbk5H4rdrmShGxSBGxSBGxSBGxSBGxSBGxyIMntc13G4lXGolXaptnjMR3a5vvNhJ3FRGLFBGLFBGLFBGLFBGLFBGLPPgDRuJV2uaVRuIZbXMyEu/QNicj8Q4j8Upt80pFxCJFxCJFxCJFxCJFxCIP4l9tczISd43ESductM1dbRNQRCxSRCxSRCxSRCxSRCxSRCzyIP6XtjkZibtG4qRt7hqJK23zNykiFikiFikiFikiFikiFnnwB7TNbzQSr9Q2JyNxMhI/Vdv8ZEXEIkXEIkXEIkXEIkXEIkXEIg+eNBLbtM3JSJy0zZWROGmbk5G40jYnI/FKI/EbFRGLFBGLFBGLFBGLFBGLFBGLfHx+4S8yEu/SNicjcdI28ZwiYpEiYpEiYpEiYpEiYpGPzy8cjMRJ25yMxHdrm99qJO5qm7tG4ru1zSsVEYsUEYsUEYsUEYsUEYsUEYt8fH7hCSNxV9u8y0hcaZuTkXhG23y3kbjSNs8YiStt80ojcdI2dxURixQRixQRixQRixQRixQRizx4o5E4aZu7RuKkba6MxG81Eidtc2UkTtrmrpF4RtvcNRInbXOliFikiFikiFikiFikiFikiFjkwZPa5mQkrrTNyUjc1TY/wUjc1TYnI3GlbU5G4h3a5pXa5mQk7ioiFikiFikiFikiFikiFvn4/MLBSDyjba6MxLu0zZWROGmbk5E4aZufaiSe0TZXRuKkbU5G4pXa5koRsUgRsUgRsUgRsUgRsUgRsciDJ7XNyUhcaZuTkbirbU5G4krbvMtIvFLb3NU2zxiJK21zMhInbXNlJE7a5q4iYpEiYpEiYpEiYpEiYpEiYpEHf0DbvMNInLTNlZF4l7Y5GYm7RuKV2uaukXiXkThpmytFxCJFxCJFxCJFxCJFxCIP3mgkTtrmykictM3JSFxpm2eMxF0j8Yy2uTISP1nb3NU2JyNxVxGxSBGxSBGxSBGxSBGxSBGxyIM/YCSutM3JSNw1Eidtc2UkfoK2ORmJdxiJdxmJK21z0jZ3FRGLFBGLFBGLFBGLFBGLfHx+4S8yEq/WNu8wEne1zSuNxDPa5h2KiEWKiEWKiEWKiEWKiEWKiEUe/IeR+K3a5krbvNpI3NU2d7XNyUjcNRInbXNX25yMxCu1zZUiYpEiYpEiYpEiYpEiYpEiYpEHT2qb7zYSd43ESdu8Uts8YySutM0rtc0rjcRJ27xDEbFIEbFIEbFIEbFIEbHIgz9gJF6lbf42bXNlJO4aiXdpm5ORuNI2JyNx0jZXiohFiohFiohFiohFiohFiohFHsT/MhInbXNlJN6lba6MxDPa5spInIzEXSPxSkXEIkXEIkXEIkXEIkXEIkXEIg/iXyNx0jZ3tc3JSNzVNicjcaVtXqltTkbirrY5GYm7iohFiohFiohFiohFiohFHvwBbfNTtc27jMQz2ubKSNw1Ej9B27xDEbFIEbFIEbFIEbFIEbFIEbHIgyeNxG80Eq/WNne1zclIXGmbu0bipG1ORuKVRuIdiohFiohFiohFiohFiohFiohFPj6/ELFEEbFIEbFIEbFIEbFIEbHIP1gyiFCxe5/2AAAAAElFTkSuQmCC" alt="QR Code for Random Non-KEA QR Code" class="w-36 h-36 block object-contain" />
+        </div>
+        <div class="text-left space-y-2 flex-1">
+          <span class="text-xs font-bold text-rose-600 uppercase tracking-wide bg-rose-50 px-2 py-0.5 rounded">Error Test</span>
+          <h3 class="font-bold text-slate-800 text-base">Random Non-KEA QR Code</h3>
+          <p class="text-xs text-slate-500">Standard website URL (e.g. google.com).</p>
+          <div class="bg-slate-50 p-2 rounded border border-slate-100">
+            <code class="text-[11px] text-slate-700 font-mono break-all select-all">https://google.com</code>
+          </div>
+        </div>
+      </div>
+  
+      </div>
+    </div>
+  </div>
 </body>
 </html>

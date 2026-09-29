@@ -185,11 +185,11 @@ export default function LoginScreen() {
           <Text style={[Type.labelMd, { color: Colors['on-surface-variant'], marginBottom: 6 }]}>
             Invigilator / Verifier Full Name
           </Text>
-          <FieldRow icon="account-circle" value={verifier.name} />
+          <FieldRow icon="account-circle" value="Darshan S Kalburgi" />
           <Text style={[Type.labelMd, { color: Colors['on-surface-variant'], marginBottom: 6 }]}>
-            Authorized Google Account
+            Designated Verification Desk
           </Text>
-          <FieldRow icon="mail" value={verifier.authProviderId} mono />
+          <FieldRow icon="badge" value="KEA-DESK-AN0081 · Nodal Officer Authorized" mono />
           <View style={styles.otpNote}>
             <Text style={[Type.labelSm, { color: Colors.secondary }]}>
               Sign in with your registered Google account to access your assigned centre &amp;
@@ -216,20 +216,19 @@ export default function LoginScreen() {
             <>
               <MaterialIcons name="login" size={18} color={Colors['on-primary']} />
               <Text style={[Type.titleMd, { color: Colors['on-primary'] }]}>
-                Sign in with Google (Verifier oAuth)
+                Sign in with Google
               </Text>
             </>
           )}
         </Pressable>
 
-        <Pressable onPress={runDemo} disabled={busy !== null} style={styles.secondaryBtn}>
-          {busy === 'demo' ? (
-            <ActivityIndicator color={Colors.primary} />
-          ) : (
-            <MaterialIcons name="pin" size={18} color={Colors.primary} />
-          )}
-          <Text style={[Type.labelLg, { color: Colors.primary }]}>
-            Continue in Demo Mode (Offline Roster)
+        <Pressable
+          onPress={runDemo}
+          disabled={busy !== null}
+          style={styles.secondaryLinkBtn}
+        >
+          <Text style={[Type.labelMd, { color: Colors.secondary }]}>
+            Demo Mode (Offline Verification Roster)
           </Text>
         </Pressable>
 
@@ -374,6 +373,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
+  },
+  secondaryLinkBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorBox: {
     flexDirection: 'row',

@@ -28,3 +28,4 @@ serviceAccountKey.json
 /ios
 /android
 .freebuff/
+.firebase/

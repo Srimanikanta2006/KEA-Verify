@@ -44,8 +44,8 @@ export const DEMO_CENTRES: (Centre & { code: string; district: string })[] = [
 export const DEMO_VERIFIERS: Verifier[] = [
   {
     verifierId: 'EMP-44910',
-    name: 'Srimanikanta (Lead Invigilator)',
-    authProviderId: 'otherpsmk@gmail.com',
+    name: 'Darshan S Kalburgi',
+    authProviderId: 'nodal.kalburgi@kea.kar.nic.in',
     assignedCentreId: 'centre_an0081',
     role: 'invigilator',
     employeeCode: 'EMP-44910',
