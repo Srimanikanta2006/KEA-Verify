@@ -9,8 +9,10 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/theme';
 import { startSyncManager } from '@/services/syncManager';
+import { initCameraFocusEnhancer } from '@/services/cameraFocusEnhancer';
 
 startSyncManager();
+initCameraFocusEnhancer();
 
 SplashScreen.preventAutoHideAsync();
 

@@ -47,6 +47,7 @@ import {
   setLocationOverride,
   type LocationOverride,
 } from '@/services/locationOverride';
+import { useCameraFocus } from '@/services/cameraFocusEnhancer';
 import type { Candidate, ScanResult } from '@/types/models';
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
@@ -96,6 +97,14 @@ export default function ScanScreen() {
   const [tick, setTick] = useState(0);
   const cooldown = useRef<number>(0);
   const cameraRef = useRef<CameraView>(null);
+  const {
+    zoom,
+    changeZoom,
+    supportsZoom,
+    focusing,
+    focusTarget,
+    triggerFocus,
+  } = useCameraFocus();
 
   const centre = session?.centre;
 
@@ -475,13 +484,64 @@ export default function ScanScreen() {
               </Text>
             </View>
           ) : null}
+
+          {/* Zoom controls (1x, 1.5x, 2x) */}
+          <View style={styles.zoomRow}>
+            {[1.0, 1.5, 2.0].map((lvl) => {
+              const active = Math.abs(zoom - lvl) < 0.1;
+              return (
+                <Pressable
+                  key={lvl}
+                  style={[styles.zoomPill, active && styles.zoomPillActive]}
+                  onPress={() => changeZoom(lvl)}
+                  hitSlop={6}
+                >
+                  <Text style={[styles.zoomPillText, active && styles.zoomPillTextActive]}>
+                    {lvl}x
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
           <CameraView
             ref={cameraRef}
-            style={StyleSheet.absoluteFill}
+            facing="back"
+            autoFocus="on"
+            style={[
+              StyleSheet.absoluteFill,
+              zoom > 1 && !supportsZoom ? { transform: [{ scale: zoom }] } : undefined,
+            ]}
             barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
             enableTorch={torch}
             onBarcodeScanned={scannerActive ? onBarcode : undefined}
           />
+
+          {/* Tap-to-focus transparent touch area */}
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={(e) => {
+              const { locationX, locationY } = e.nativeEvent;
+              triggerFocus({ x: locationX, y: locationY });
+            }}
+          />
+
+          {/* Focus Ring Indicator */}
+          {focusing ? (
+            <View
+              pointerEvents="none"
+              style={[
+                styles.focusRing,
+                focusTarget
+                  ? { left: focusTarget.x - 28, top: focusTarget.y - 28 }
+                  : styles.focusRingCenter,
+              ]}
+            >
+              <View style={styles.focusRingInner} />
+              <Text style={styles.focusingLabel}>FOCUSING…</Text>
+            </View>
+          ) : null}
+
           <View style={styles.scanline} pointerEvents="none" />
           <View style={styles.reticle} pointerEvents="none">
             {(['tl', 'tr', 'bl', 'br'] as const).map((corner) => (
@@ -499,6 +559,19 @@ export default function ScanScreen() {
             </View>
           ) : null}
         </View>
+
+        {/* Quick Focus & Distance Coaching Bar */}
+        {scan.phase === 'scanning' ? (
+          <Pressable
+            style={styles.focusHintBar}
+            onPress={() => triggerFocus()}
+          >
+            <MaterialIcons name="filter-center-focus" size={14} color={Colors['primary-fixed-dim']} />
+            <Text style={styles.focusHintText}>
+              Hold 15–25 cm away · Tap screen or here to refocus
+            </Text>
+          </Pressable>
+        ) : null}
 
         {/* Result area */}
         {scan.phase === 'found' ? (
@@ -1095,6 +1168,85 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
   },
   geoBarText: { ...Type.labelSm, color: Colors['tertiary-fixed'] },
+  zoomRow: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(23,28,36,0.85)',
+    padding: 3,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  zoomPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+  },
+  zoomPillActive: {
+    backgroundColor: Colors['primary-container'],
+  },
+  zoomPillText: {
+    ...Type.labelSm,
+    fontSize: 11,
+    color: Colors['outline-variant'],
+    fontWeight: '600',
+  },
+  zoomPillTextActive: {
+    color: Colors['on-primary-container'],
+    fontWeight: '700',
+  },
+  focusRing: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: Colors['primary-fixed-dim'],
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 30,
+  },
+  focusRingCenter: {
+    alignSelf: 'center',
+    top: '32%',
+  },
+  focusRingInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: Colors['primary-fixed-dim'],
+  },
+  focusingLabel: {
+    position: 'absolute',
+    bottom: -18,
+    ...Type.labelSm,
+    fontSize: 9,
+    color: Colors['primary-fixed-dim'],
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  focusHintBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors['surface-container-low'],
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: Radius.full,
+    alignSelf: 'center',
+  },
+  focusHintText: {
+    ...Type.labelSm,
+    color: Colors['outline-variant'],
+    fontSize: 11,
+  },
   scanline: {
     position: 'absolute',
     left: 0,
