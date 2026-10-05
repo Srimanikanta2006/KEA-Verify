@@ -1,85 +1,198 @@
-# KEA Verify — Exam Centre Face Verification App
+# KEA Verify — Exam Centre Candidate Verification System
 
-React Native (Expo SDK 57) rebuild of the approved Stitch designs for the
-**Karnataka Examinations Authority** invigilator app. The `*.html` files at the
-repo root are the finalized mockups kept as reference — the screens are
-recreated 1:1 in `src/app/` and wired to real functionality.
+[![Live Web App](https://img.shields.io/badge/Live%20App-kea--verify.web.app-success?style=for-the-badge&logo=firebase)](https://kea-verify.web.app)
+[![Expo SDK 52/57](https://img.shields.io/badge/Expo%20SDK-57-blue?style=for-the-badge&logo=expo)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?style=for-the-badge&logo=react)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
 
-**Stack:** Expo + TypeScript + Expo Router · Firebase (Auth/Firestore, free Spark tier) · Google oAuth via `@react-native-google-signin/google-signin` · AsyncStorage.
+---
 
-## Feature roadmap (build order)
+## 1. Executive Summary
 
-| # | Feature | Status |
-|---|---------|--------|
-| 1 | Auth + backend foundation (Google oAuth, verifier→centre session, seeded demo data) | ✅ this drop |
-| 2 | Real QR scan → candidate lookup (expo-camera, offline-first lookup) | ✅ this drop |
-| 3 | Geofencing (device location vs centre, gate before lookup + demo override) | ✅ this drop |
-| 4 | Centre-mismatch + duplicate-scan logic (local-first scanLogs, audit every outcome) | ✅ this drop |
-| 5 | Face detection + matching (on-device ML Kit + MobileFaceNet, manual-confirm fallback) | ✅ this drop |
-| 6 | Offline queue + sync resilience (NetInfo auto-sync, Offline Cache Ready UI) | ✅ this drop |
+**KEA Verify** is an enterprise-grade, offline-first exam centre candidate authentication system designed for the **Karnataka Examinations Authority (KEA)**. Operating on both mobile smartphones and web browsers, it serves as an on-ground digital invigilator tool to authenticate candidates entering examination halls, effectively preventing:
 
-## Run it
+- **Impersonation & Fake Hall Tickets**: Cryptographically structured QR codes matched against live photo and facial recognition models.
+- **Centre-Jumping**: Enforces strict GPS geofencing against the candidate's allotted venue.
+- **Duplicate Attendance Fraud**: Immediate anti-passback detection flags any hall ticket already scanned earlier.
+- **Network Outage Failures**: An offline-first local queue records verifications instantly and synchronizes idempotently to Cloud Firestore once network is restored.
+
+**Live Production URL:** [https://kea-verify.web.app](https://kea-verify.web.app)
+
+---
+
+## 2. Technology Stack
+
+| Layer | Technologies Used | Purpose |
+|---|---|---|
+| **Core Framework** | React Native (Expo SDK 52/57), TypeScript (Strict) | Single cross-platform codebase supporting Android, iOS, and Web. |
+| **Routing & Navigation** | Expo Router (v4, file-based routing) | Deep-linking, nested layouts, modals, and screen transitions. |
+| **Backend & Cloud** | Google Firebase (Auth, Firestore, Hosting) | Secure verifier authentication, real-time database, security rules, and global hosting. |
+| **Camera & Vision** | `expo-camera`, Web `MediaStreamTrack` API, `jsQR`, BarcodeDetector API | Full HD 1080p stream, continuous hardware autofocus, tap-to-focus, and optical/digital zoom. |
+| **Location & Geofencing** | `expo-location`, Haversine Distance Algorithm | Geographic boundary enforcement verifying scans occur inside the designated centre radius (<500m). |
+| **Biometrics & AI** | On-device MobileFaceNet embedding logic, Expo Image Manipulator | Live face capture vs reference photo matching with cosine similarity scoring. |
+| **Offline Storage & Sync** | `@react-native-async-storage/async-storage`, NetInfo | Offline roster cache, local write queuing, and resilient background cloud synchronization. |
+| **Design & Typography** | Vanilla StyleSheet tokens, Material Icons (@expo/vector-icons) | High-contrast design system adhering to official KEA examination aesthetics. |
+
+---
+
+## 3. System Architecture & Workflow
+
+```
+   [ Candidate Hall Ticket QR ]
+                │
+                ▼
+   [ 1. High-Definition Scanner ] ──► (1080p HD, Continuous Autofocus, 1.5x/2x Zoom)
+                │
+                ▼
+   [ 2. GPS Geofence Check ] ─────► Verifies invigilator device is within 500m of centre
+                │
+                ▼
+   [ 3. Policy & Roster Check ] ──► Validates allotted centre; checks duplicate scan logs
+                │
+                ▼
+   [ 4. Biometric Face Match ] ───► Compares live photo to reference; opens review if needed
+                │
+                ▼
+   [ 5. Local Offline Queue ] ────► Commits scan locally to AsyncStorage (instant response)
+                │
+                ▼
+   [ 6. Cloud Synchronization ] ──► Background sync to Firestore; auto-updates live dashboard
+```
+
+---
+
+## 4. Key Feature Matrix
+
+| # | Feature | Status | Description |
+|---|---|:---:|---|
+| **1** | **Authentication & Sessions** | ✅ Active | Google OAuth for authorized invigilator emails + One-Tap Demo Mode. |
+| **2** | **High-Definition QR Scanner** | ✅ Active | Custom web stream enhancer boosting resolution to 1080p, continuous autofocus, tap-to-focus, and zoom controls. |
+| **3** | **Geofencing Gating** | ✅ Active | Device GPS coordinates validated against centre centroid with demo override switch. |
+| **4** | **Centre & Duplicate Policy** | ✅ Active | Real-time audit checks detect centre mismatches and prevent duplicate check-ins. |
+| **5** | **Face Match & Manual Review** | ✅ Active | Live photo comparison with manual approval/rejection modal requiring documented justification. |
+| **6** | **Offline Queue & Background Sync**| ✅ Active | Local-first write pipeline with network resilience auto-draining scans to Cloud Firestore. |
+
+---
+
+## 5. Quick Start & Local Setup
+
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+
+### Installation & Run
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/Srimanikanta2006/KEA-Verify.git
+cd KEA-Verify
+
+# 2. Install dependencies
 npm install
-npm run typecheck   # verify the tree compiles
-npm start           # press a → android emulator, or scan QR with Expo Go*
+
+# 3. Verify contracts and types
+npm run check
+
+# 4. Start local development
+npm start
+# Press 'w' for Web, 'a' for Android, or 'i' for iOS
 ```
 
-\* Google Sign-In needs a **development build** (`npx expo run:android`) because
-it includes native code; Demo Mode works everywhere, including Expo Go.
+---
 
-## Firebase setup (free, no credit card)
+## 6. Environment & Firebase Setup
 
-1. Create a project at console.firebase.google.com (Spark plan).
-2. **Authentication → Sign-in method → enable Google.** Add your Android SHA-1
-   (from `cd android && ./gradlew signingReport` after `npx expo prebuild`, or
-   `npx expo credentials` via EAS) plus the support email.
-3. **Firestore → Create database** (production mode).
-4. Copy `.env.example` → `.env` and paste the web API config values
-   (Project settings → General → SDK setup).
-5. Google Cloud console → APIs & Services → Credentials → copy the
-   **Web client ID** (auto-created by Firebase for Google Sign-In) into
-   `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
-6. Paste the verifiers' Google emails into `scripts/seed-firebase.mjs`
-   (search for `authProviderId`) — the app looks verifiers up by email.
-7. Publish `firestore.rules` in Firestore → Rules, replacing the admin UID
-   placeholder with your own (create any email/password test user in Auth and
-   copy its UID).
-8. Seed: either set `FIREBASE_SERVICE_ACCOUNT` to the service-account JSON, or
-   create a password test user and run:
+1. Copy `.env.example` to `.env`:
    ```bash
-   FIREBASE_API_KEY=... FIREBASE_AUTH_EMAIL=you@test.com \
-   FIREBASE_AUTH_PASSWORD=... npm run seed
+   cp .env.example .env
    ```
-   → writes 3 centres, 3 verifiers, 24 candidates.
+2. Fill in the values from your Firebase Project Console (**Project Settings → General → Web apps**):
+   ```env
+   EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
+   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your_oauth_web_client_id
+   ```
+3. Deploy Firestore security rules:
+   ```bash
+   npx firebase deploy --only firestore:rules
+   ```
+4. Optional: Seed sample test data (3 centres, 3 verifiers, 24 candidates):
+   ```bash
+   npm run seed
+   ```
 
-## Scaling story (Feature 6 talking points for judges)
+---
 
-- **Stateless clients, thin backend**: all matching runs on-device (TFLite + ML Kit); the backend is just Firestore reads/writes. No GPU servers, no per-scan API calls. Cost stays at $0 and latency stays flat under load.
-- **Offline-first writes**: scans append to a local queue (AsyncStorage mirror) and sync idempotently (`scanLogs/{clientScanId}` — client UUIDs make retries safe). Wifi dropping mid-demo loses nothing.
-- **Indexed lookups**: candidate lookup hits one indexed doc (`candidates/{candidateId}`); duplicate checks query `scanLogs` by `candidateId` equality — add a composite index `(candidateId, timestamp)` at scale. Statewide load = 5 lakh scans/day is trivial doc-GET traffic for Firestore's model.
-- **Read-path sharding by centre**: every verifier only ever reads their centre's roster (`candidates` where `allottedCentreId == X`), so hot reads are naturally partitioned per centre; a statewide write storm on result day touches disjoint documents.
-- **Next step if deployed**: move duplicate-check + attendance writes behind a Cloud Function (transactional per candidate) once budgets allow; the client contract stays identical.
+## 7. Scaling & Resilience Story (Architecture Highlights)
 
-## Demo Mode (no keys needed)
+- **Stateless Clients, Zero GPU Cost**: Biometric matching and QR decoding run directly on the client device. The backend operates purely as a standard Firestore document store without requiring expensive GPU inference servers.
+- **Offline-First Resilience**: All scans append to a local queue (`AsyncStorage`) with unique UUIDs (`clientScanId`). Even if Wi-Fi or cellular networks drop entirely mid-exam, no data is lost.
+- **Natural Centre Sharding**: Each invigilator only queries candidates allotted to their specific centre ID (`candidates where allottedCentreId == X`). Statewide examination traffic (500,000+ candidates) partitions cleanly across centres.
+- **Immutable Security**: Firestore rules enforce append-only scan logs. Once a verification log is created, it cannot be edited, overwritten, or deleted by any user.
 
-On the login screen tap **Continue in Demo Mode** — signs in as the first
-bundled verifier (AN0081) with the full offline roster. Good for UI checks and
-emulator screenshots; real auth requires the Firebase setup above.
+---
 
-## Project layout
+## 8. Project Structure
 
 ```
-src/app/          Expo Router screens (login, dashboard, scan, manual verification)
-src/components/   Reusable UI components (SyncBanner, FoundCard, etc.)
-src/config/       Firebase configuration
-src/constants/    Theme, colors, and typography tokens
-src/context/      AuthProvider (persisted invigilator session)
-src/services/     Core domain services (auth, camera, geofence, roster, scanLogs)
-src/types/        TypeScript data models
-scripts/          Build, seed, and QR test utilities
-mockups/          Approved static Stitch mockups (preserved for visual reference)
-test-qr-codes.html Test sheet with static pre-rendered candidate QR codes
-firestore.rules   Security rules for Cloud Firestore
+├── assets/                    # App icons, splash screens, and tflite face models
+├── dist/                      # Compiled production web bundle (git ignored)
+├── mockups/                   # Approved static Stitch HTML design mockups (reference)
+│   ├── README.md              # Documentation of visual mockups
+│   ├── index.html             # Redirect to login mockup
+│   ├── login.html             # Login screen mockup
+│   ├── dashboard.html         # Dashboard mockup
+│   ├── manual_verification.html # Verification review mockup
+│   ├── qr_scan.html           # QR scan mockup
+│   ├── records_history.html   # Records history mockup
+│   └── verification_complete.html # Completion mockup
+├── scripts/
+│   ├── check-contract.mjs     # Model contract validation
+│   ├── generate-static-qr.cjs # Static base64 QR generator
+│   ├── make-test-qr-codes.mjs # QR test data maker
+│   ├── post-build.cjs         # Font injection & static asset generator
+│   ├── qr-decode-selftest.mjs # QR decode selftest runner
+│   ├── qr-selftest.entry.ts   # QR test entrypoint
+│   └── seed-firebase.mjs      # Database seed script for exam centres & rosters
+├── src/
+│   ├── app/                   # Screen routes (Expo Router)
+│   │   ├── _layout.tsx        # Global provider gate & camera interceptor init
+│   │   ├── index.tsx          # Invigilator Login screen
+│   │   ├── dashboard.tsx      # Live statistics & candidate management
+│   │   ├── scan.tsx           # Camera scanner & verification interface
+│   │   ├── manual-verification.tsx # Photo comparison & rejection workflow
+│   │   └── history.tsx        # Verification audit log
+│   ├── components/            # Reusable UI widgets (SyncBanner, FoundCard, etc.)
+│   ├── constants/             # Design system theme tokens (Colors, Typography, Radius)
+│   ├── context/               # AuthContext state management
+│   └── services/              # Domain logic (cameraFocusEnhancer, geofence, roster, etc.)
+├── test-qr-codes.html         # Test sheet with pre-rendered base64 QR codes
+├── firebase.json              # Firebase Hosting configuration & security headers
+├── firestore.rules            # Security rules for Firestore collections
+└── .env.example               # Template environment configuration
 ```
+
+---
+
+## 9. Testing & Quality Assurance
+
+```bash
+# Run contract verification & TypeScript compilation checks
+npm run check
+
+# Run QR multi-pass degradation selftests (wrinkles, stains, low contrast)
+npm run test:qr
+
+# Build and export production web bundle
+npm run build
+```
+
+---
+
+## 10. License
+
+Developed for the **Karnataka Examinations Authority (KEA)** entrance examination verification protocol. Proprietary & confidential.
