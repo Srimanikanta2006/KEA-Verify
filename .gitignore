@@ -1,31 +1,58 @@
+# Operating System files
 .DS_Store
 Thumbs.db
 *.log
-screens_raw/
+*.tmp
+*.bak
 
-# --- Expo / React Native ---
+# Environment & Sensitive Credentials (NEVER COMMIT)
+.env
+.env*.local
+.env.production
+.env.staging
+serviceAccountKey.json
+*.pem
+*.key
+*.jks
+*.p8
+*.p12
+*.keystore
+*.mobileprovision
+
+# Dependencies
 node_modules/
+
+# Expo & React Native builds
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 .kotlin/
 *.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
 .metro-health-check*
+
+# Native build folders
+/ios/
+/android/
+
+# Package manager debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
-*.pem
-.env*.local
-.env
-serviceAccountKey.json
+
+# TypeScript & tooling caches
 *.tsbuildinfo
-/ios
-/android
 .freebuff/
 .firebase/
+.cache/
+
+# Agent & workflow workspaces (keep repo clean)
+.agents/
+.agent/
+.gsd/
+.gemini/
+adapters/
+GSD-STYLE.md
+PROJECT_RULES.md
+model_capabilities.yaml
+screens_raw/

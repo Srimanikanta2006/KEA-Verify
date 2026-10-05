@@ -82,8 +82,21 @@ The platform operates seamlessly on both mobile devices (Android/iOS) and modern
 
 ```
 ├── dist/                      # Compiled production web bundle
+├── mockups/                   # Approved static Stitch HTML design mockups (reference)
+│   ├── index.html             # Redirect to login
+│   ├── login.html             # Login screen mockup
+│   ├── dashboard.html         # Dashboard mockup
+│   ├── manual_verification.html # Verification review mockup
+│   ├── qr_scan.html           # QR scan mockup
+│   ├── records_history.html   # Records history mockup
+│   └── verification_complete.html # Completion mockup
 ├── scripts/
+│   ├── check-contract.mjs     # Model contract validation
+│   ├── generate-static-qr.cjs # Static base64 QR generator
+│   ├── make-test-qr-codes.mjs # QR test data maker
 │   ├── post-build.cjs         # Font injection & static asset generator
+│   ├── qr-decode-selftest.mjs # QR decode selftest runner
+│   ├── qr-selftest.entry.ts   # QR test entrypoint
 │   └── seed-firebase.mjs      # Database seed script for exam centres & rosters
 ├── src/
 │   ├── app/                   # Screen routes (Expo Router)

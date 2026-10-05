@@ -616,7 +616,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: Radius.md,
     backgroundColor: Colors.error,
-    alignItems: 'center',
     justifyContent: 'center',
   },
 });

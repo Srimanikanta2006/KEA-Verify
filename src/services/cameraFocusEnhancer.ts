@@ -10,8 +10,8 @@
  * 5. Periodically triggers focus keepalive so the lens never stays locked out of focus.
  */
 
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
-import { useEffect, useRef, useState, useCallback } from 'react';
 
 let isInterceptorInstalled = false;
 let activeVideoTrack: any = null;
@@ -139,7 +139,7 @@ export async function triggerHardwareRefocus(): Promise<boolean> {
         setTimeout(async () => {
           try {
             await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
-          } catch {}
+          } catch { }
         }, 400);
         return true;
       } else if (caps.focusMode.includes('continuous')) {

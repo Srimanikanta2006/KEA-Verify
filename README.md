@@ -71,13 +71,15 @@ emulator screenshots; real auth requires the Firebase setup above.
 ## Project layout
 
 ```
-src/app/          Expo Router screens (login, dashboard, scan)
-src/components/   shared UI
-src/config/       Firebase init (env-driven)
-src/context/      AuthProvider (persisted session)
-src/services/     auth, session, roster (Firestore + offline cache), demo data
-src/types/        shared data model (centres, verifiers, candidates, scanLogs)
-scripts/          seed-firebase.mjs
-firestore.rules   security rules
-*.html            approved Stitch mockups (reference only)
+src/app/          Expo Router screens (login, dashboard, scan, manual verification)
+src/components/   Reusable UI components (SyncBanner, FoundCard, etc.)
+src/config/       Firebase configuration
+src/constants/    Theme, colors, and typography tokens
+src/context/      AuthProvider (persisted invigilator session)
+src/services/     Core domain services (auth, camera, geofence, roster, scanLogs)
+src/types/        TypeScript data models
+scripts/          Build, seed, and QR test utilities
+mockups/          Approved static Stitch mockups (preserved for visual reference)
+test-qr-codes.html Test sheet with static pre-rendered candidate QR codes
+firestore.rules   Security rules for Cloud Firestore
 ```

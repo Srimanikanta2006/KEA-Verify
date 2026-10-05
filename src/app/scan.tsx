@@ -1,8 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Image } from 'expo-image';
 import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,10 +15,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SyncBanner } from '@/components/SyncBanner';
 import { Colors, Radius, Type } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-import { findCandidate } from '@/services/roster';
-import { parseKeaQr } from '@/services/qr';
+import { useCameraFocus } from '@/services/cameraFocusEnhancer';
+import { DEMO_CENTRES } from '@/services/demoData';
+import { compareLiveToReference, FACE_MATCH_THRESHOLD } from '@/services/faceMatch';
 import {
   evaluateGeofence,
   formatDistance,
@@ -27,27 +29,25 @@ import {
   type LocationFix,
 } from '@/services/geofence';
 import {
-  evaluateScanAgainstPolicy,
-  recordScan,
-  type ExistingVerification,
-  type ScanEvaluation,
-} from '@/services/scanLogs';
-import { compareLiveToReference, FACE_MATCH_THRESHOLD } from '@/services/faceMatch';
-import { SyncBanner } from '@/components/SyncBanner';
+  clearLocationOverride,
+  getLocationOverride,
+  setLocationOverride,
+  type LocationOverride,
+} from '@/services/locationOverride';
+import { parseKeaQr } from '@/services/qr';
 import {
   MANUAL_FALLBACK_MS,
   startQrEscalation,
   type EscalationHandle,
   type ScanGuidance,
 } from '@/services/robustScan';
-import { DEMO_CENTRES } from '@/services/demoData';
+import { findCandidate } from '@/services/roster';
 import {
-  clearLocationOverride,
-  getLocationOverride,
-  setLocationOverride,
-  type LocationOverride,
-} from '@/services/locationOverride';
-import { useCameraFocus } from '@/services/cameraFocusEnhancer';
+  evaluateScanAgainstPolicy,
+  recordScan,
+  type ExistingVerification,
+  type ScanEvaluation,
+} from '@/services/scanLogs';
 import type { Candidate, ScanResult } from '@/types/models';
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
@@ -507,7 +507,7 @@ export default function ScanScreen() {
           <CameraView
             ref={cameraRef}
             facing="back"
-            autoFocus="on"
+            autofocus="off"
             style={[
               StyleSheet.absoluteFill,
               zoom > 1 && !supportsZoom ? { transform: [{ scale: zoom }] } : undefined,
