@@ -101,11 +101,7 @@ export default function ScanScreen() {
   const [manualEntry, setManualEntry] = useState('');
   const [manualOpen, setManualOpen] = useState(false);
   const [scanningSince, setScanningSince] = useState<number | null>(null);
-  const [tick, setTick] = useState<number>(0);
-  const [viewportDim, setViewportDim] = useState<{ width: number; height: number }>({
-    width: 360,
-    height: 270,
-  });
+  const [tick, setTick] = useState(0);
   const cooldown = useRef<number>(0);
   const cameraRef = useRef<CameraView>(null);
   const {
@@ -248,75 +244,19 @@ export default function ScanScreen() {
         return;
       }
 
-      soundFeedback.playSuccess();
       setScan({ phase: 'found', candidate, raw, evaluation });
     },
     [session, lastFix, override, rapidMode]
   );
 
-  const isBarcodeInsideReticle = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (barcode: any): boolean => {
-      if (!viewportDim.width || !viewportDim.height) return true;
-
-      const cx = viewportDim.width / 2;
-      const cy = viewportDim.height / 2;
-      // Reticle frame is 180x180 (half-size is 90px) centered at (cx, cy).
-      // Codes whose center lies inside the reticle box (+10px buffer for hand jitter) are accepted.
-      // Codes outside the box are strictly rejected to prevent scanning adjacent QR codes.
-      const margin = 100;
-
-      // 1. Check cornerPoints if provided by camera driver
-      if (barcode?.cornerPoints && Array.isArray(barcode.cornerPoints) && barcode.cornerPoints.length >= 2) {
-        const pts = barcode.cornerPoints;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const avgX = pts.reduce((sum: number, p: any) => sum + (p.x || 0), 0) / pts.length;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const avgY = pts.reduce((sum: number, p: any) => sum + (p.y || 0), 0) / pts.length;
-        return (
-          avgX >= cx - margin &&
-          avgX <= cx + margin &&
-          avgY >= cy - margin &&
-          avgY <= cy + margin
-        );
-      }
-
-      // 2. Check bounds if provided
-      if (barcode?.bounds?.origin) {
-        const { origin, size } = barcode.bounds;
-        const qrCenterX = (origin.x || 0) + (size?.width || 0) / 2;
-        const qrCenterY = (origin.y || 0) + (size?.height || 0) / 2;
-        return (
-          qrCenterX >= cx - margin &&
-          qrCenterX <= cx + margin &&
-          qrCenterY >= cy - margin &&
-          qrCenterY <= cy + margin
-        );
-      }
-
-      return true;
-    },
-    [viewportDim]
-  );
-
   const onBarcode = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (barcode: any) => {
-      const data: string = barcode?.data;
-      if (!data) return;
-
-      // Strict ROI check first: ignore any codes outside the reticle box without eating cooldown
-      if (!isBarcodeInsideReticle(barcode)) {
-        return;
-      }
-
+    ({ data }: { data: string }) => {
       const now = Date.now();
-      if (now - cooldown.current < 800) return;
-
+      if (now - cooldown.current < 2000) return;
       cooldown.current = now;
       void resolve(data);
     },
-    [resolve, isBarcodeInsideReticle]
+    [resolve]
   );
 
   const reset = useCallback(() => {
@@ -343,7 +283,7 @@ export default function ScanScreen() {
       },
       onDecode: (data) => {
         const now = Date.now();
-        if (now - cooldown.current < 1000) return;
+        if (now - cooldown.current < 2000) return;
         cooldown.current = now;
         void resolve(data);
       },
@@ -592,15 +532,7 @@ export default function ScanScreen() {
         {/* Feature 6: connectivity / offline queue state */}
         <SyncBanner />
         {/* Camera viewport (design: 4:3, reticle, scanline) */}
-        <View
-          style={styles.viewport}
-          onLayout={(e) => {
-            const { width, height } = e.nativeEvent.layout;
-            if (width > 0 && height > 0) {
-              setViewportDim({ width, height });
-            }
-          }}
-        >
+        <View style={styles.viewport}>
           {geoEval ? (
             <View style={styles.geoBar}>
               <MaterialIcons
@@ -655,7 +587,7 @@ export default function ScanScreen() {
             }}
           />
 
-          {/* Focus Ring Indicator - centered directly in the reticle scanner box */}
+          {/* Focus Ring Indicator (centered) */}
           {focusing ? (
             <View pointerEvents="none" style={styles.focusRing}>
               <View style={styles.focusRingInner} />
@@ -1293,7 +1225,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     overflow: 'hidden',
     backgroundColor: Colors['inverse-surface'],
-    position: 'relative',
+    justifyContent: 'flex-end',
   },
   geoBar: {
     position: 'absolute',
@@ -1345,11 +1277,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: 64,
-    height: 64,
-    marginTop: -32,
-    marginLeft: -32,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    marginTop: -28,
+    marginLeft: -28,
+    borderRadius: 28,
     borderWidth: 2,
     borderColor: Colors['primary-fixed-dim'],
     borderStyle: 'dashed',
@@ -1390,36 +1322,23 @@ const styles = StyleSheet.create({
   },
   scanline: {
     position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: 172,
+    left: 0,
+    right: 0,
+    top: 24,
     height: 2,
-    marginLeft: -86,
-    marginTop: -1,
     backgroundColor: Colors['primary-container'],
-    opacity: 0.75,
+    opacity: 0.8,
   },
   reticle: {
     position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: 180,
-    height: 180,
-    marginTop: -90,
-    marginLeft: -90,
+    alignSelf: 'center',
+    top: '22%',
+    width: 160,
+    height: 160,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
   },
-  pillRow: {
-    position: 'absolute',
-    bottom: 10,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    zIndex: 25,
-  },
+  pillRow: { flexDirection: 'row', justifyContent: 'center', padding: 12 },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',

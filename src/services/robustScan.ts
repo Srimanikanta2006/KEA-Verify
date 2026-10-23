@@ -31,14 +31,9 @@ export const MANUAL_FALLBACK_MS = 8000;
 async function snapshotToRgba(
   uri: string
 ): Promise<{ rgba: Uint8ClampedArray; width: number; height: number }> {
-  // Crop to central Region of Interest (matching the scanner reticle box)
-  // Ensures only QR codes inside the box are scanned and accelerates decode speed.
   const small = await ImageManipulator.manipulateAsync(
     uri,
-    [
-      { resize: { width: 480 } },
-      { crop: { originX: 80, originY: 20, width: 320, height: 320 } },
-    ],
+    [{ resize: { width: 480 } }],
     { compress: 70, format: ImageManipulator.SaveFormat.JPEG }
   );
   const skia = await import('@shopify/react-native-skia');
