@@ -14,10 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-import { getAllCandidates } from '@/services/roster';
+import { getAllCandidates, getRosterMetadata, refreshRoster, type RosterMetadata } from '@/services/roster';
 import { getAllLocalLogs, subscribeScanLogs } from '@/services/scanLogs';
 import { SyncBanner } from '@/components/SyncBanner';
-import { runSyncNow, useSyncStatus } from '@/services/syncManager';
+import { getPendingCount, runSyncNow, useSyncStatus } from '@/services/syncManager';
 import type { Candidate, ScanLog } from '@/types/models';
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
@@ -67,15 +67,27 @@ export default function DashboardScreen() {
   const { session, signOut } = useAuth();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [scanLogs, setScanLogs] = useState<ScanLog[]>([]);
+  const [rosterMeta, setRosterMeta] = useState<RosterMetadata>({
+    lastUpdated: null,
+    count: 0,
+    source: 'demo',
+  });
   const [profileVisible, setProfileVisible] = useState(false);
+  const [unsyncedModalVisible, setUnsyncedModalVisible] = useState(false);
+  const [pendingUnsynced, setPendingUnsynced] = useState(0);
   const [justRefreshed, setJustRefreshed] = useState(false);
   const { online } = useSyncStatus();
 
   const loadRoster = useCallback(async () => {
     try {
-      const [list, logs] = await Promise.all([getAllCandidates(), getAllLocalLogs()]);
+      const [list, logs, meta] = await Promise.all([
+        getAllCandidates(),
+        getAllLocalLogs(),
+        getRosterMetadata(),
+      ]);
       setCandidates(list);
       setScanLogs(logs);
+      setRosterMeta(meta);
     } catch {
       setCandidates([]);
     }
@@ -178,11 +190,23 @@ export default function DashboardScreen() {
   }, [scanLogs, candidates]);
 
   const handleRefresh = useCallback(async () => {
-    await runSyncNow();
+    await Promise.all([runSyncNow(), refreshRoster()]);
     await loadRoster();
     setJustRefreshed(true);
     setTimeout(() => setJustRefreshed(false), 1500);
   }, [loadRoster]);
+
+  const handleAttemptLogout = useCallback(async () => {
+    setProfileVisible(false);
+    const pending = await getPendingCount();
+    if (pending > 0) {
+      setPendingUnsynced(pending);
+      setUnsyncedModalVisible(true);
+    } else {
+      await signOut();
+      router.replace('/login');
+    }
+  }, [signOut, router]);
 
   if (!session) return null;
   const centreCode =
@@ -221,6 +245,22 @@ export default function DashboardScreen() {
               </Text>
             </View>
             <View style={styles.bannerDot} />
+          </View>
+          <View style={styles.rosterMetaRow}>
+            <MaterialIcons name="folder-shared" size={14} color={Colors.secondary} />
+            <Text style={[Type.labelSm, { color: Colors['on-surface-variant'] }]}>
+              Roster:{' '}
+              <Text style={{ fontWeight: '700', color: Colors['on-surface'] }}>
+                {candidates.length} candidates
+              </Text>{' '}
+              ·{' '}
+              {rosterMeta.lastUpdated
+                ? `Updated ${new Date(rosterMeta.lastUpdated).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}`
+                : 'Local Offline Cache'}
+            </Text>
           </View>
         </View>
 
@@ -389,14 +429,7 @@ export default function DashboardScreen() {
                 Session stored locally · persists offline
               </Text>
             </View>
-            <Pressable
-              style={styles.logoutBtn}
-              onPress={async () => {
-                setProfileVisible(false);
-                await signOut();
-                router.replace('/login');
-              }}
-            >
+            <Pressable style={styles.logoutBtn} onPress={handleAttemptLogout}>
               <MaterialIcons name="logout" size={18} color={Colors['on-error-container']} />
               <Text style={[Type.titleSm, { color: Colors['on-error-container'] }]}>
                 Logout / Exit Session
@@ -404,6 +437,72 @@ export default function DashboardScreen() {
             </Pressable>
             <Pressable style={styles.dismissBtn} onPress={() => setProfileVisible(false)}>
               <Text style={[Type.labelMd, { color: Colors['on-surface'] }]}>Dismiss</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Offline Workflow Step 9 Guard: Unsynced Records Alert Modal */}
+      <Modal visible={unsyncedModalVisible} transparent animationType="fade">
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setUnsyncedModalVisible(false)}
+        >
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHead}>
+              <MaterialIcons name="cloud-off" size={24} color={Colors.error} />
+              <Text style={[Type.titleMd, { color: Colors.error }]}>
+                Unsynced Records Alert
+              </Text>
+            </View>
+            <View style={[styles.modalRow, { backgroundColor: 'rgba(186,26,26,0.06)' }]}>
+              <Text style={[Type.bodyMd, { color: Colors['on-surface'] }]}>
+                You have <Text style={{ fontWeight: '700', color: Colors.error }}>{pendingUnsynced} attendance record(s)</Text> waiting to sync to the central server.
+              </Text>
+              <Text style={[Type.labelSm, { color: Colors['on-surface-variant'], marginTop: 4 }]}>
+                Logging out before syncing may delay candidate verification in the central system. Please sync now if internet is available.
+              </Text>
+            </View>
+
+            <Pressable
+              style={styles.syncNowBtn}
+              onPress={async () => {
+                await runSyncNow();
+                const remaining = await getPendingCount();
+                setPendingUnsynced(remaining);
+                if (remaining === 0) {
+                  setUnsyncedModalVisible(false);
+                  await signOut();
+                  router.replace('/login');
+                }
+              }}
+            >
+              <MaterialIcons name="sync" size={18} color="#FFFFFF" />
+              <Text style={[Type.titleSm, { color: '#FFFFFF' }]}>
+                Sync Now & Logout
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.logoutAnywayBtn}
+              onPress={async () => {
+                setUnsyncedModalVisible(false);
+                await signOut();
+                router.replace('/login');
+              }}
+            >
+              <Text style={[Type.labelMd, { color: Colors.error }]}>
+                Logout Anyway (Keep in Queue)
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.dismissBtn}
+              onPress={() => setUnsyncedModalVisible(false)}
+            >
+              <Text style={[Type.labelMd, { color: Colors['on-surface'] }]}>
+                Cancel / Stay in Session
+              </Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -587,11 +686,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
+  syncNowBtn: {
+    height: 44,
+    borderRadius: Radius.xl,
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  logoutAnywayBtn: {
+    height: 40,
+    borderRadius: Radius.xl,
+    backgroundColor: 'rgba(186,26,26,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   dismissBtn: {
     height: 40,
     borderRadius: Radius.xl,
     backgroundColor: Colors['surface-container'],
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rosterMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors['surface-container'],
   },
 });

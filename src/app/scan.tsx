@@ -48,6 +48,7 @@ import {
   type ExistingVerification,
   type ScanEvaluation,
 } from '@/services/scanLogs';
+import { soundFeedback } from '@/services/soundFeedback';
 import type { Candidate, ScanResult } from '@/types/models';
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
@@ -89,6 +90,12 @@ export default function ScanScreen() {
   const [lastFix, setLastFix] = useState<LocationFix | null>(null);
   const [capturing, setCapturing] = useState(false);
   const [captureError, setCaptureError] = useState(false);
+  const [rapidMode, setRapidMode] = useState(false);
+  const [rapidBanner, setRapidBanner] = useState<{
+    name: string;
+    rollNo: string;
+    room?: string;
+  } | null>(null);
   const [guidance, setGuidance] = useState<ScanGuidance | null>(null);
   const [escalationRef, setEscalationRef] = useState<EscalationHandle | null>(null);
   const [manualEntry, setManualEntry] = useState('');
@@ -133,12 +140,16 @@ export default function ScanScreen() {
       const pos = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
+      // Detect mock / simulated GPS on supported devices
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const isMocked = Boolean((pos as any).mocked);
       const geoEval = evaluateGeofence(
         {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           timestamp: pos.timestamp,
           accuracyMeters: pos.coords.accuracy ?? undefined,
+          isMocked,
         },
         centre
       );
@@ -147,6 +158,7 @@ export default function ScanScreen() {
         lng: pos.coords.longitude,
         timestamp: pos.timestamp,
         accuracyMeters: pos.coords.accuracy ?? undefined,
+        isMocked,
       };
       setLastFix(realFix);
       setLastKnownFix(realFix);
@@ -172,6 +184,7 @@ export default function ScanScreen() {
       const key = payload?.rollNo ?? raw.trim();
       const candidate = key ? await findCandidate(key) : null;
       if (!candidate || !session) {
+        soundFeedback.playError();
         setScan({ phase: 'not_found', raw });
         return;
       }
@@ -182,6 +195,7 @@ export default function ScanScreen() {
       // Rejections are logged immediately; the 'ok' path logs attendance only
       // after face verification completes (Feature 5 capture / manual confirm).
       if (evaluation.status !== 'ok') {
+        soundFeedback.playError();
         const fix = lastFix;
         const overrideNote = override ? ` (location override: ${override.label})` : '';
         const result: ScanResult =
@@ -201,11 +215,38 @@ export default function ScanScreen() {
           entryMethod,
           notes,
         });
+        setScan({ phase: 'found', candidate, raw, evaluation });
+        return;
+      }
+
+      // If in Rapid Gate Mode and status is ok, auto-admit instantly with audio chime!
+      if (rapidMode) {
+        soundFeedback.playSuccess();
+        void recordScan({
+          candidate,
+          session,
+          result: 'matched',
+          deviceLat: lastFix?.lat ?? null,
+          deviceLng: lastFix?.lng ?? null,
+          entryMethod,
+          notes: 'Rapid Gate Mode (continuous scan auto-admit)',
+        });
+        setRapidBanner({
+          name: candidate.name,
+          rollNo: candidate.rollNo,
+          room: candidate.allottedRoom,
+        });
+        setTimeout(() => {
+          setRapidBanner(null);
+          setScan({ phase: 'scanning' });
+          setScanningSince(Date.now());
+        }, 1600);
+        return;
       }
 
       setScan({ phase: 'found', candidate, raw, evaluation });
     },
-    [session, lastFix, override]
+    [session, lastFix, override, rapidMode]
   );
 
   const onBarcode = useCallback(
@@ -297,11 +338,13 @@ export default function ScanScreen() {
               : `face match ${(score! * 100).toFixed(1)}% (threshold ${FACE_MATCH_THRESHOLD * 100}%)`,
         });
         if (matched) {
+          soundFeedback.playSuccess();
           router.replace({
             pathname: '/verified',
             params: { candidateId: candidate.candidateId, score: score!.toFixed(4), via: 'embedding' },
           });
         } else {
+          soundFeedback.playError();
           router.replace({
             pathname: '/manual-verification',
             params: {
@@ -454,6 +497,25 @@ export default function ScanScreen() {
           Scan Verification
         </Text>
         <Pressable
+          onPress={() => setRapidMode((r) => !r)}
+          style={[styles.rapidToggleBtn, rapidMode && styles.rapidToggleBtnActive]}
+          hitSlop={8}
+        >
+          <MaterialIcons
+            name={rapidMode ? 'bolt' : 'offline-bolt'}
+            size={18}
+            color={rapidMode ? '#FFFFFF' : Colors.primary}
+          />
+          <Text
+            style={[
+              styles.rapidToggleText,
+              rapidMode && styles.rapidToggleTextActive,
+            ]}
+          >
+            {rapidMode ? 'RAPID ON' : 'RAPID'}
+          </Text>
+        </Pressable>
+        <Pressable
           onPress={() => setTorch((t) => !t)}
           style={[styles.torchBtn, torch && styles.torchBtnActive]}
         >
@@ -556,6 +618,26 @@ export default function ScanScreen() {
               <Text style={styles.guidanceText} numberOfLines={1}>
                 {guidance.message}
               </Text>
+            </View>
+          ) : null}
+
+          {/* Rapid Gate Mode Floating Success Toast */}
+          {rapidBanner ? (
+            <View style={styles.rapidSuccessOverlay} pointerEvents="none">
+              <View style={styles.rapidSuccessCard}>
+                <View style={styles.rapidSuccessIconBox}>
+                  <MaterialIcons name="check" size={26} color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rapidSuccessTitle}>GATE CLEARED · ADMITTED</Text>
+                  <Text style={styles.rapidSuccessName} numberOfLines={1}>
+                    {rapidBanner.name}
+                  </Text>
+                  <Text style={styles.rapidSuccessSubtitle}>
+                    {rapidBanner.rollNo}{rapidBanner.room ? ` · ${rapidBanner.room}` : ''}
+                  </Text>
+                </View>
+              </View>
             </View>
           ) : null}
         </View>
@@ -1489,4 +1571,79 @@ const styles = StyleSheet.create({
   },
 
   centerWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+
+  rapidToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    height: 34,
+    paddingHorizontal: 10,
+    borderRadius: Radius.full,
+    backgroundColor: Colors['surface-container-high'],
+    borderWidth: 1,
+    borderColor: Colors['surface-container-highest'],
+  },
+  rapidToggleBtnActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  rapidToggleText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: Colors['on-surface'],
+  },
+  rapidToggleTextActive: {
+    color: '#FFFFFF',
+  },
+
+  rapidSuccessOverlay: {
+    position: 'absolute',
+    top: 20,
+    left: 16,
+    right: 16,
+    alignItems: 'center',
+    zIndex: 99,
+  },
+  rapidSuccessCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#0F766E', // rich deep emerald
+    borderRadius: Radius.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+    width: '100%',
+  },
+  rapidSuccessIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rapidSuccessTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    color: '#CCFBF1',
+  },
+  rapidSuccessName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 1,
+  },
+  rapidSuccessSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#E6FFFA',
+    marginTop: 1,
+  },
 });

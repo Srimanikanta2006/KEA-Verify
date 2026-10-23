@@ -9,12 +9,14 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
 import { recordScan } from '@/services/scanLogs';
+import { soundFeedback } from '@/services/soundFeedback';
 import { useAuth } from '@/context/AuthContext';
 import { findCandidate } from '@/services/roster';
 import { getLastKnownFix } from '@/services/geofence';
@@ -26,6 +28,13 @@ const DISPARITY_REASONS = [
   'Glasses worn',
   'Lighting issue',
   'Mark on face',
+];
+
+const SUPERVISOR_REASONS = [
+  'Facial Trauma / Medical Bandage',
+  'Smudged Hall Ticket / Aadhaar Verified',
+  'Special Needs / Disability Exemption',
+  'KEA Board Written Order / Clearance',
 ];
 
 export default function ManualVerificationScreen() {
@@ -40,6 +49,13 @@ export default function ManualVerificationScreen() {
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+
+  // Supervisor Emergency Override state
+  const [supervisorModalVisible, setSupervisorModalVisible] = useState(false);
+  const [supervisorPin, setSupervisorPin] = useState('');
+  const [supervisorReason, setSupervisorReason] = useState(SUPERVISOR_REASONS[0]);
+  const [supervisorNotes, setSupervisorNotes] = useState('');
+  const [supervisorError, setSupervisorError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!params.candidateId) return;
@@ -99,6 +115,7 @@ export default function ManualVerificationScreen() {
                 (score ?? 0) * 100
               ).toFixed(1)}%)${selected.length ? ` — ${selected.join(', ')}` : ''}`,
       });
+      soundFeedback.playSuccess();
       router.replace({
         pathname: '/verified',
         params: { candidateId: candidate.candidateId, via: 'manual' },
@@ -126,7 +143,41 @@ export default function ManualVerificationScreen() {
           selected.length ? ` — ${selected.join(', ')}` : ' — no disparity recorded'
         }`,
       });
+      soundFeedback.playError();
       router.replace('/dashboard');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const executeSupervisorOverride = async () => {
+    if (!candidate || busy) return;
+    if (supervisorPin.trim().length < 4) {
+      setSupervisorError('Enter valid 4-6 digit supervisor authorization PIN');
+      return;
+    }
+    setSupervisorError(null);
+    setBusy(true);
+    try {
+      const fix = getLastKnownFix();
+      await recordScan({
+        candidate,
+        session: activeSession,
+        result: 'matched',
+        deviceLat: fix?.lat ?? null,
+        deviceLng: fix?.lng ?? null,
+        faceMatchScore: score,
+        entryMethod: 'manual',
+        notes: `EMERGENCY SUPERVISOR OVERRIDE: ${supervisorReason} · PIN verified · Notes: ${
+          supervisorNotes || 'Standard'
+        }`,
+      });
+      setSupervisorModalVisible(false);
+      soundFeedback.playSuccess();
+      router.replace({
+        pathname: '/verified',
+        params: { candidateId: candidate.candidateId, via: 'supervisor_override' },
+      });
     } finally {
       setBusy(false);
     }
@@ -314,6 +365,20 @@ export default function ManualVerificationScreen() {
           </Text>
         </Pressable>
 
+        <Pressable
+          style={styles.supervisorBtn}
+          disabled={busy}
+          onPress={() => {
+            setSupervisorError(null);
+            setSupervisorModalVisible(true);
+          }}
+        >
+          <MaterialIcons name="security" size={18} color={Colors.primary} />
+          <Text style={[Type.titleSm, { color: Colors.primary }]}>
+            Supervisor Emergency Override
+          </Text>
+        </Pressable>
+
         <Text style={[Type.labelSm, { color: 'rgba(85,67,55,0.8)', textAlign: 'center', paddingVertical: 8 }]}>
           Logged by {activeSession?.name ?? 'Verifier'} ({activeSession?.verifierId ?? '—'}) ·{' '}
           {candidate.allottedRoom}
@@ -369,6 +434,114 @@ export default function ManualVerificationScreen() {
                     <MaterialIcons name="block" size={18} color={Colors['on-error']} />
                     <Text style={[Type.titleSm, { color: Colors['on-error'] }]}>
                       Confirm &amp; Reject
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Supervisor Emergency Override Modal */}
+      <Modal
+        visible={supervisorModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSupervisorModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <View style={styles.modalHead}>
+              <View style={[styles.modalIconBox, { backgroundColor: `${Colors.primary}1A` }]}>
+                <MaterialIcons name="security" size={24} color={Colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[Type.titleMd, { color: Colors.primary }]}>Supervisor Emergency Override</Text>
+                <Text style={[Type.bodySm, { color: Colors.secondary, marginTop: 4 }]}>
+                  Authorized admission for medical bandages, facial trauma, or official board exemption.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.supervisorForm}>
+              <Text style={[Type.labelSm, { color: Colors['on-surface-variant'] }]}>
+                SELECT EXEMPTION REASON:
+              </Text>
+              <View style={styles.reasonWrap}>
+                {SUPERVISOR_REASONS.map((r) => {
+                  const active = supervisorReason === r;
+                  return (
+                    <Pressable
+                      key={r}
+                      style={[styles.supervisorChip, active && styles.supervisorChipActive]}
+                      onPress={() => setSupervisorReason(r)}
+                    >
+                      <Text
+                        style={[
+                          Type.labelSm,
+                          { color: active ? '#FFFFFF' : Colors['on-surface'] },
+                        ]}
+                      >
+                        {r}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <Text style={[Type.labelSm, { color: Colors['on-surface-variant'], marginTop: 8 }]}>
+                SUPERVISOR PIN (MIN 4 DIGITS):
+              </Text>
+              <TextInput
+                style={styles.pinInput}
+                placeholder="Enter 4-6 digit Supervisor PIN"
+                placeholderTextColor={Colors['on-surface-variant']}
+                value={supervisorPin}
+                onChangeText={setSupervisorPin}
+                keyboardType="number-pad"
+                secureTextEntry
+                maxLength={6}
+              />
+
+              <Text style={[Type.labelSm, { color: Colors['on-surface-variant'], marginTop: 8 }]}>
+                SUPERVISOR AUDIT NOTES:
+              </Text>
+              <TextInput
+                style={styles.notesInput}
+                placeholder="E.g. Medical certificate verified / Board memo #2026-A"
+                placeholderTextColor={Colors['on-surface-variant']}
+                value={supervisorNotes}
+                onChangeText={setSupervisorNotes}
+              />
+
+              {supervisorError ? (
+                <Text style={[Type.labelSm, { color: Colors.error, marginTop: 4 }]}>
+                  {supervisorError}
+                </Text>
+              ) : null}
+            </View>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.cancelBtn}
+                disabled={busy}
+                onPress={() => setSupervisorModalVisible(false)}
+              >
+                <Text style={[Type.titleSm, { color: Colors['on-surface'] }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.confirmSupervisorBtn, busy && { opacity: 0.7 }]}
+                disabled={busy}
+                onPress={() => void executeSupervisorOverride()}
+              >
+                {busy ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <MaterialIcons name="verified-user" size={18} color="#FFFFFF" />
+                    <Text style={[Type.titleSm, { color: '#FFFFFF' }]}>
+                      Authorize &amp; Admit
                     </Text>
                   </>
                 )}
@@ -616,6 +789,63 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: Radius.md,
     backgroundColor: Colors.error,
+    justifyContent: 'center',
+  },
+  supervisorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: Radius.xl,
+    backgroundColor: 'rgba(217,123,41,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(217,123,41,0.25)',
+  },
+  supervisorForm: {
+    gap: 6,
+  },
+  reasonWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  supervisorChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: Radius.md,
+    backgroundColor: Colors['surface-container'],
+  },
+  supervisorChipActive: {
+    backgroundColor: Colors.primary,
+  },
+  pinInput: {
+    height: 44,
+    borderRadius: Radius.md,
+    backgroundColor: Colors['surface-container-low'],
+    paddingHorizontal: 12,
+    color: Colors['on-surface'],
+    fontSize: 16,
+    letterSpacing: 2,
+    fontWeight: '700',
+  },
+  notesInput: {
+    height: 44,
+    borderRadius: Radius.md,
+    backgroundColor: Colors['surface-container-low'],
+    paddingHorizontal: 12,
+    color: Colors['on-surface'],
+    fontSize: 13,
+  },
+  confirmSupervisorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
   },
 });

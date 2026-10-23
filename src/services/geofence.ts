@@ -12,6 +12,8 @@ export interface LocationFix {
   timestamp: number;
   /** horizontal accuracy in meters, if the OS reports it */
   accuracyMeters?: number;
+  /** whether the operating system flagged this fix as mocked / simulated */
+  isMocked?: boolean;
 }
 
 export interface GeofenceEvaluation {
@@ -19,8 +21,12 @@ export interface GeofenceEvaluation {
   distanceMeters: number;
   /** configured max distance for the centre */
   allowedRadiusMeters: number;
-  /** true when distance is within the (accuracy-expanded) radius */
+  /** true when distance is within the (accuracy-expanded) radius AND not mocked */
   inside: boolean;
+  /** true if GPS spoofing / mock location was detected */
+  mockDetected?: boolean;
+  /** explanation if geofence failed */
+  reason?: string;
 }
 
 /** Great-circle distance between two coordinates, in meters. */
@@ -44,16 +50,31 @@ export function evaluateGeofence(
   centre: { lat: number; lng: number; allowedRadiusMeters: number },
   opts?: { graceMeters?: number }
 ): GeofenceEvaluation {
+  // Security guard: Reject spoofed / mock GPS signals outright
+  if (fix.isMocked) {
+    return {
+      distanceMeters: 0,
+      allowedRadiusMeters: centre.allowedRadiusMeters,
+      inside: false,
+      mockDetected: true,
+      reason: 'Mock location / GPS spoofing detected. Genuine hardware GPS required.',
+    };
+  }
+
   const distanceMeters = haversineMeters(fix, centre);
   // GPS accuracy can legitimately spread the fix by tens of meters; expand the
   // radius by the reported accuracy (capped) plus a small grace margin.
   const grace = opts?.graceMeters ?? 25;
   const accuracyExpansion = Math.min(fix.accuracyMeters ?? 0, 50);
   const effectiveRadius = centre.allowedRadiusMeters + grace + accuracyExpansion;
+  const inside = distanceMeters <= effectiveRadius;
+
   return {
     distanceMeters: Math.round(distanceMeters),
     allowedRadiusMeters: centre.allowedRadiusMeters,
-    inside: distanceMeters <= effectiveRadius,
+    inside,
+    mockDetected: false,
+    reason: inside ? undefined : `Device is outside centre boundary (${Math.round(distanceMeters)}m away)`,
   };
 }
 
