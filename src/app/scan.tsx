@@ -12,6 +12,7 @@ import {
   Text,
   TextInput,
   View,
+  type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -1182,7 +1183,7 @@ function Centered({
   );
 }
 
-const reticleCorners: Record<'tl' | 'tr' | 'bl' | 'br', View['props']['style']> = {
+const reticleCorners: Record<'tl' | 'tr' | 'bl' | 'br', ViewStyle> = {
   tl: { position: 'absolute', top: 0, left: 0, width: 24, height: 24, borderTopWidth: 2, borderLeftWidth: 2, borderTopColor: Colors['primary-container'], borderLeftColor: Colors['primary-container'], borderTopLeftRadius: Radius.lg },
   tr: { position: 'absolute', top: 0, right: 0, width: 24, height: 24, borderTopWidth: 2, borderRightWidth: 2, borderTopColor: Colors['primary-container'], borderRightColor: Colors['primary-container'], borderTopRightRadius: Radius.lg },
   bl: { position: 'absolute', bottom: 0, left: 0, width: 24, height: 24, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomColor: Colors['primary-container'], borderLeftColor: Colors['primary-container'], borderBottomLeftRadius: Radius.lg },
