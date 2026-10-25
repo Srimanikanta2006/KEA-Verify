@@ -1,13 +1,8 @@
 {
-  "name": "kea-verify",
-  "displayName": "KEA Verify",
   "expo": {
     "name": "KEA Verify",
     "slug": "kea-verify",
     "version": "1.0.0",
-    "android": {
-      "package": "com.kea.verify"
-    },
     "extra": {
       "eas": {
         "projectId": "e2c5d823-cb8c-4b9e-b183-98f4ddf63434"
