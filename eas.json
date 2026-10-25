@@ -4,7 +4,9 @@
   },
   "build": {
     "development": {
+      "distribution": "internal",
       "android": {
+        "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
       }
     },
