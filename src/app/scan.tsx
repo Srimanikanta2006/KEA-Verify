@@ -39,8 +39,6 @@ import {
 import { parseKeaQr } from '@/services/qr';
 import {
   MANUAL_FALLBACK_MS,
-  startQrEscalation,
-  type EscalationHandle,
   type ScanGuidance,
 } from '@/services/robustScan';
 import { findCandidate } from '@/services/roster';
@@ -98,7 +96,6 @@ export default function ScanScreen() {
     room?: string;
   } | null>(null);
   const [guidance, setGuidance] = useState<ScanGuidance | null>(null);
-  const [escalationRef, setEscalationRef] = useState<EscalationHandle | null>(null);
   const [manualEntry, setManualEntry] = useState('');
   const [manualOpen, setManualOpen] = useState(false);
   const [scanningSince, setScanningSince] = useState<number | null>(null);
@@ -302,36 +299,6 @@ export default function ScanScreen() {
     setScanningSince(Date.now());
   }, []);
 
-  // Layer 1+2: native continuous decode + snapshot escalation while scanning.
-  useEffect(() => {
-    if (geo.phase !== 'ready' || scan.phase !== 'scanning') {
-      escalationRef?.stop();
-      if (escalationRef) setEscalationRef(null);
-      setGuidance(null);
-      return;
-    }
-    const handle = startQrEscalation({
-      takeSnapshot: async () => {
-        try {
-          const shot = await cameraRef.current?.capture();
-          return shot?.uri ? { uri: shot.uri } : null;
-        } catch {
-          return null;
-        }
-      },
-      onDecode: (data) => {
-        const now = Date.now();
-        if (now - cooldown.current < 2000) return;
-        cooldown.current = now;
-        void resolve(data);
-      },
-      onGuidance: setGuidance,
-    });
-    setEscalationRef(handle);
-    return () => handle.stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geo.phase, scan.phase]);
-
   // Layer 5: after N seconds of struggle, offer the manual path automatically.
   // `tick` forces a re-render each second while the timer is relevant.
   const elapsedMs = useMemo(
@@ -339,6 +306,26 @@ export default function ScanScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [scanningSince, tick]
   );
+
+  // Progressive coaching guidance while scanning (camera decode runs natively via CameraX & Google ML Kit)
+  useEffect(() => {
+    if (geo.phase !== 'ready' || scan.phase !== 'scanning') {
+      setGuidance(null);
+      return;
+    }
+    if (scanningSince === null) {
+      setScanningSince(Date.now());
+    }
+    if (elapsedMs < 3000) {
+      setGuidance({ code: 'steady', message: 'Center the QR code in the frame' });
+    } else if (elapsedMs < 6000) {
+      setGuidance({ code: 'closer', message: 'Hold 15–25 cm away · Tap screen to refocus' });
+    } else if (elapsedMs < 10000) {
+      setGuidance({ code: 'dark', message: 'Ensure good lighting · Try turning on flash' });
+    } else {
+      setGuidance({ code: 'contrast', message: 'QR unreadable? Tap below for manual entry' });
+    }
+  }, [geo.phase, scan.phase, elapsedMs, scanningSince]);
   const manualFallbackDue =
     (manualOpen ||
       (geo.phase === 'ready' && scan.phase === 'scanning' && elapsedMs > MANUAL_FALLBACK_AFTER_MS)) &&

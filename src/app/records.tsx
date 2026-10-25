@@ -19,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getAllCandidates } from '@/services/roster';
 import { getAllLocalLogs, subscribeScanLogs } from '@/services/scanLogs';
 import { SyncBanner } from '@/components/SyncBanner';
+import { BottomNav } from '@/components/BottomNav';
 import type { Candidate, ScanLog } from '@/types/models';
 
 type Tab = 'roster' | 'logs';
@@ -67,6 +68,18 @@ export default function RecordsScreen() {
       router.replace('/login');
     }
   }, [session, router]);
+
+  useEffect(() => {
+    if (params.tab === 'logs' || params.tab === 'roster') {
+      setTab(params.tab);
+    }
+  }, [params.tab]);
+
+  useEffect(() => {
+    if (params.filter) {
+      setLogFilter(params.filter);
+    }
+  }, [params.filter]);
 
   const reloadData = useCallback(async () => {
     try {
@@ -341,6 +354,10 @@ export default function RecordsScreen() {
           </>
         )}
       </ScrollView>
+      <BottomNav
+        activeTab={tab === 'logs' ? 'records' : 'roster'}
+        onTabSelect={(selected) => setTab(selected === 'records' ? 'logs' : 'roster')}
+      />
     </SafeAreaView>
   );
 }

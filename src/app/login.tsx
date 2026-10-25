@@ -99,9 +99,9 @@ export default function LoginScreen() {
         <View style={styles.brandRow}>
           <Image source={KEA_LOGO_SOURCE} style={styles.logoImage} resizeMode="cover" />
           <View style={{ flex: 1 }}>
-            <Text style={Type.titleMd}>Karnataka Examinations Authority</Text>
+            <Text style={Type.titleMd}>Karnataka Examinations Authority ⚡</Text>
             <Text style={[Type.bodySm, { color: Colors.secondary }]}>
-              KEA Verify · Exam Verification Desk
+              KEA Verify · Live Fast Refresh Active
             </Text>
           </View>
         </View>

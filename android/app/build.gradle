@@ -157,4 +157,4 @@ dependencies {
     }
 }
 
-apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+// MaterialIcons.ttf is placed directly in src/main/assets/fonts/

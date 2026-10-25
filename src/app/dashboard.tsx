@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getAllCandidates, getRosterMetadata, refreshRoster, type RosterMetadata } from '@/services/roster';
 import { getAllLocalLogs, subscribeScanLogs } from '@/services/scanLogs';
 import { SyncBanner } from '@/components/SyncBanner';
+import { BottomNav } from '@/components/BottomNav';
 import { getPendingCount, runSyncNow, useSyncStatus } from '@/services/syncManager';
 import type { Candidate, ScanLog } from '@/types/models';
 
@@ -370,141 +371,7 @@ export default function DashboardScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom nav */}
-      <View style={styles.bottomNav}>
-        <Pressable style={styles.navItem} onPress={() => router.replace('/dashboard')}>
-          <MaterialIcons name="dashboard" size={24} color={Colors.primary} />
-          <Text style={[Type.labelSm, { color: Colors.primary, marginTop: 2 }]}>Dashboard</Text>
-        </Pressable>
-        <Pressable style={styles.navItem} onPress={() => router.push('/records?tab=logs')}>
-          <MaterialIcons name="receipt-long" size={24} color={Colors.secondary} />
-          <Text style={[Type.labelSm, { color: Colors.secondary, marginTop: 2 }]}>Records</Text>
-        </Pressable>
-        <Pressable style={styles.scanFab} onPress={() => router.push('/scan')}>
-          <MaterialIcons name="qr-code-scanner" size={28} color={Colors['on-primary']} />
-        </Pressable>
-        <Pressable style={styles.navItem} onPress={() => router.push('/records?tab=roster')}>
-          <MaterialIcons name="badge" size={24} color={Colors.secondary} />
-          <Text style={[Type.labelSm, { color: Colors.secondary, marginTop: 2 }]}>Roster</Text>
-        </Pressable>
-        <Pressable style={styles.navItem} onPress={() => setProfileVisible(true)}>
-          <MaterialIcons name="domain" size={24} color={Colors.secondary} />
-          <Text style={[Type.labelSm, { color: Colors.secondary, marginTop: 2 }]}>Centre</Text>
-        </Pressable>
-      </View>
-
-      {/* Centre/profile modal */}
-      <Modal transparent visible={profileVisible} animationType="fade" onRequestClose={() => setProfileVisible(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setProfileVisible(false)}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
-            <View style={styles.modalHead}>
-              <MaterialIcons name="domain" size={18} color={Colors.primary} />
-              <Text style={[Type.titleMd, { color: Colors.primary, flex: 1 }]}>
-                Examination Centre Profile
-              </Text>
-              <Pressable onPress={() => setProfileVisible(false)}>
-                <MaterialIcons name="close" size={20} color={Colors.secondary} />
-              </Pressable>
-            </View>
-            <View style={styles.modalRow}>
-              <Text style={[Type.labelSm, { color: Colors['on-surface-variant'] }]}>CENTRE / INSTITUTION</Text>
-              <Text style={[Type.bodyMd, { fontWeight: '600' }]}>{session.centre.name}</Text>
-              <Text style={[Type.labelSm, { color: Colors.primary }]}>
-                Centre Code: {centreCode} ({(session.centre as { district?: string }).district ?? '—'})
-              </Text>
-            </View>
-            <View style={styles.modalRow}>
-              <Text style={[Type.labelSm, { color: Colors['on-surface-variant'] }]}>ACTIVE INVIGILATOR</Text>
-              <Text style={[Type.bodyMd, { fontWeight: '600' }]}>{session.name}</Text>
-              <Text style={[Type.labelSm, { color: Colors.secondary }]}>
-                {session.verifierId} · {session.role.replace('_', ' ')} · mode: {session.mode}
-              </Text>
-            </View>
-            <View style={styles.modalRow}>
-              <Text style={[Type.labelSm, { color: Colors['on-surface-variant'] }]}>ASSIGNED CENTRE ID</Text>
-              <Text style={[Type.bodyMd, { fontWeight: '600' }]}>{session.assignedCentreId}</Text>
-              <Text style={[Type.labelSm, { color: Colors.tertiary }]}>
-                Session stored locally · persists offline
-              </Text>
-            </View>
-            <Pressable style={styles.logoutBtn} onPress={handleAttemptLogout}>
-              <MaterialIcons name="logout" size={18} color={Colors['on-error-container']} />
-              <Text style={[Type.titleSm, { color: Colors['on-error-container'] }]}>
-                Logout / Exit Session
-              </Text>
-            </Pressable>
-            <Pressable style={styles.dismissBtn} onPress={() => setProfileVisible(false)}>
-              <Text style={[Type.labelMd, { color: Colors['on-surface'] }]}>Dismiss</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      {/* Offline Workflow Step 9 Guard: Unsynced Records Alert Modal */}
-      <Modal visible={unsyncedModalVisible} transparent animationType="fade">
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => setUnsyncedModalVisible(false)}
-        >
-          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalHead}>
-              <MaterialIcons name="cloud-off" size={24} color={Colors.error} />
-              <Text style={[Type.titleMd, { color: Colors.error }]}>
-                Unsynced Records Alert
-              </Text>
-            </View>
-            <View style={[styles.modalRow, { backgroundColor: 'rgba(186,26,26,0.06)' }]}>
-              <Text style={[Type.bodyMd, { color: Colors['on-surface'] }]}>
-                You have <Text style={{ fontWeight: '700', color: Colors.error }}>{pendingUnsynced} attendance record(s)</Text> waiting to sync to the central server.
-              </Text>
-              <Text style={[Type.labelSm, { color: Colors['on-surface-variant'], marginTop: 4 }]}>
-                Logging out before syncing may delay candidate verification in the central system. Please sync now if internet is available.
-              </Text>
-            </View>
-
-            <Pressable
-              style={styles.syncNowBtn}
-              onPress={async () => {
-                await runSyncNow();
-                const remaining = await getPendingCount();
-                setPendingUnsynced(remaining);
-                if (remaining === 0) {
-                  setUnsyncedModalVisible(false);
-                  await signOut();
-                  router.replace('/login');
-                }
-              }}
-            >
-              <MaterialIcons name="sync" size={18} color="#FFFFFF" />
-              <Text style={[Type.titleSm, { color: '#FFFFFF' }]}>
-                Sync Now & Logout
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.logoutAnywayBtn}
-              onPress={async () => {
-                setUnsyncedModalVisible(false);
-                await signOut();
-                router.replace('/login');
-              }}
-            >
-              <Text style={[Type.labelMd, { color: Colors.error }]}>
-                Logout Anyway (Keep in Queue)
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={styles.dismissBtn}
-              onPress={() => setUnsyncedModalVisible(false)}
-            >
-              <Text style={[Type.labelMd, { color: Colors['on-surface'] }]}>
-                Cancel / Stay in Session
-              </Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <BottomNav activeTab="dashboard" />
     </SafeAreaView>
   );
 }
