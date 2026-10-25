@@ -14,7 +14,7 @@ import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
+import { Colors, KEA_LOGO_SOURCE, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { getAllCandidates } from '@/services/roster';
 import { getAllLocalLogs, subscribeScanLogs } from '@/services/scanLogs';
@@ -189,7 +189,7 @@ export default function RecordsScreen() {
             {session.centre.name} · {(session.centre as { code?: string }).code ?? ''}
           </Text>
         </View>
-        <Image source={{ uri: KEA_LOGO_URI }} style={styles.logo} resizeMode="cover" />
+        <Image source={KEA_LOGO_SOURCE} style={styles.logo} resizeMode="cover" />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>

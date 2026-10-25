@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
+import { Colors, KEA_LOGO_SOURCE, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
 import { recordScan } from '@/services/scanLogs';
 import { soundFeedback } from '@/services/soundFeedback';
 import { useAuth } from '@/context/AuthContext';
@@ -218,7 +218,7 @@ export default function ManualVerificationScreen() {
             KEA Invigilator Field Desk
           </Text>
         </View>
-        <Image source={{ uri: KEA_LOGO_URI }} style={styles.logo} resizeMode="cover" />
+        <Image source={KEA_LOGO_SOURCE} style={styles.logo} resizeMode="cover" />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>

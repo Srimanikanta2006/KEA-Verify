@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
+import { Colors, KEA_LOGO_SOURCE, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { getAllCandidates, getRosterMetadata, refreshRoster, type RosterMetadata } from '@/services/roster';
 import { getAllLocalLogs, subscribeScanLogs } from '@/services/scanLogs';
@@ -216,7 +216,7 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <View style={styles.headerBrand}>
           <Image
-            source={{ uri: KEA_LOGO_URI }}
+            source={KEA_LOGO_SOURCE}
             style={styles.logoImage}
             resizeMode="cover"
           />

@@ -15,7 +15,9 @@ if (Platform.OS !== 'web') {
     .then(({ GoogleSignin }) => {
       GoogleSignin.configure({
         // Web client id is required to mint a Firebase credential on native.
-        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
+        webClientId:
+          process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+          '108688937497-ss1fiqs9ah5oguacr521q8p9ie5g8sbt.apps.googleusercontent.com',
         offlineAccess: false,
       });
     })

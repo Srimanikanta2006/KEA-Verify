@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
+import { Colors, KEA_LOGO_SOURCE, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { AuthError } from '@/services/auth';
 import { DEMO_CENTRES, DEMO_VERIFIERS } from '@/services/demoData';
@@ -97,7 +97,7 @@ export default function LoginScreen() {
       >
         {/* Brand header */}
         <View style={styles.brandRow}>
-          <Image source={{ uri: KEA_LOGO_URI }} style={styles.logoImage} resizeMode="cover" />
+          <Image source={KEA_LOGO_SOURCE} style={styles.logoImage} resizeMode="cover" />
           <View style={{ flex: 1 }}>
             <Text style={Type.titleMd}>Karnataka Examinations Authority</Text>
             <Text style={[Type.bodySm, { color: Colors.secondary }]}>
@@ -223,12 +223,14 @@ export default function LoginScreen() {
         <Pressable
           onPress={runDemo}
           disabled={busy !== null}
-          style={styles.secondaryLinkBtn}
+          style={styles.secondaryBtn}
         >
-          <Text style={[Type.labelMd, { color: Colors.secondary }]}>
+          <MaterialIcons name="offline-bolt" size={18} color={Colors.primary} />
+          <Text style={[Type.titleSm, { color: Colors['on-surface'] }]}>
             Demo Mode (Offline Verification Roster)
           </Text>
         </Pressable>
+
 
         <View style={styles.card}>
           <Pressable onPress={() => setSupportVisible(true)} style={styles.supportRow}>
