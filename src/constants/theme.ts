@@ -49,7 +49,7 @@ export type ColorToken = keyof typeof Colors;
 
 export const c = (token: ColorToken): string => Colors[token];
 
-export const KEA_LOGO_SOURCE = require('@/assets/images/icon.png');
+export const KEA_LOGO_SOURCE = require('../../assets/images/icon.png');
 export const KEA_LOGO_URI =
   'https://cf-images.assettype.com/newindianexpress%2F2026-04-18%2Fa1dsxi7a%2FNew-Project-2025-07-12T130910.505.jpg?rect=130%2C0%2C900%2C675&w=1200&h=900&auto=format%2Ccompress&fit=crop';
 
