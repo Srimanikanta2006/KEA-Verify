@@ -1,11 +1,9 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, type IconName } from '@/components/Icon';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors, Radius, Type } from '@/constants/theme';
 import { runSyncNow, useSyncStatus } from '@/services/syncManager';
-
-type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 /**
  * Feature 6 UI: surfaces the offline queue state (spec: "Offline Cache Ready").

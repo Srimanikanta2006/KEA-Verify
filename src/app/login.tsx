@@ -1,5 +1,5 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { MaterialIcons, type IconName } from '@/components/Icon';
+import { useRouter } from '@/navigation/router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,8 +18,6 @@ import { useAuth } from '@/context/AuthContext';
 import { AuthError } from '@/services/auth';
 import { DEMO_CENTRES, DEMO_VERIFIERS } from '@/services/demoData';
 import { useSyncStatus } from '@/services/syncManager';
-
-type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 function FieldRow({
   icon,

@@ -1,20 +1,11 @@
-import * as ImageManipulator from 'expo-image-manipulator';
 import { decodeDegradedQr } from './qrWorker';
 
 /**
  * Layered robust-scanning runtime.
  *
- * Layer 1 (native): expo-camera's onBarcodeScanned keeps decoding the live
- *   feed continuously (multi-frame attempts for free; motion + native
- *   auto-focus naturally recover many damaged codes).
- * Layer 2 (this module): while scanning, grab a downscaled snapshot every
- *   ~700ms and run the heavy multi-pass preprocessed decode (grayscale →
- *   median → adaptive thresholds → exposure variants → 2x upscale retry),
- *   alternating exhaustive passes.
- * Layer 4: each frame is analysed (mean / std-dev / glare fraction) to coach
- *   the specific failure: "move closer", "reduce glare", "too dark", etc.
- *
- * All on-device, zero network. Rate-limited so UI stays live (see qrWorker).
+ * Layer 1 (native): barcode scanner keeps decoding the live feed continuously.
+ * Layer 2 (this module): grab snapshot frame and run multi-pass preprocessed decode.
+ * Layer 4: each frame is analysed to coach guidance.
  */
 
 export interface ScanGuidance {
@@ -31,14 +22,9 @@ export const MANUAL_FALLBACK_MS = 8000;
 async function snapshotToRgba(
   uri: string
 ): Promise<{ rgba: Uint8ClampedArray; width: number; height: number }> {
-  const small = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: 480 } }],
-    { compress: 70, format: ImageManipulator.SaveFormat.JPEG }
-  );
   const skia = await import('@shopify/react-native-skia');
   const { Skia, ColorType, AlphaType } = skia;
-  const res = await fetch(small.uri);
+  const res = await fetch(uri);
   const bytes = new Uint8Array(await res.arrayBuffer());
   const image = Skia.Image.MakeImageFromEncoded(Skia.Data.fromBytes(bytes));
   if (!image) throw new Error('snapshot decode failed');

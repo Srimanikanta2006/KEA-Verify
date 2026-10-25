@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Crypto from 'expo-crypto';
+import { v4 as uuidv4 } from 'uuid';
 import {
   collection,
   doc,
@@ -57,7 +57,7 @@ export interface RecordScanInput {
 }
 
 export function newScanId(): string {
-  return Crypto.randomUUID();
+  return uuidv4();
 }
 
 async function readMirror(): Promise<ScanLog[]> {

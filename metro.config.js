@@ -1,31 +1,14 @@
-const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
-const config = getDefaultConfig(__dirname);
+const defaultConfig = getDefaultConfig(__dirname);
 
 // react-native-fast-tflite: ship .tflite models as bundled assets
-config.resolver.assetExts.push('tflite');
+defaultConfig.resolver.assetExts.push('tflite');
 
-const originalResolveRequest = config.resolver.resolveRequest;
-
-const NATIVE_ONLY_PACKAGES = new Set([
-  'react-native-fast-tflite',
-  'react-native-nitro-modules',
-  '@react-native-google-signin/google-signin',
-  'expo-face-detector',
-]);
-
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (platform === 'web' && NATIVE_ONLY_PACKAGES.has(moduleName)) {
-    return {
-      type: 'sourceFile',
-      filePath: path.resolve(__dirname, 'src/shims/emptyMock.js'),
-    };
-  }
-  if (originalResolveRequest) {
-    return originalResolveRequest(context, moduleName, platform);
-  }
-  return context.resolveRequest(context, moduleName, platform);
+const config = {
+  resolver: {
+    assetExts: defaultConfig.resolver.assetExts,
+  },
 };
 
-module.exports = config;
+module.exports = mergeConfig(defaultConfig, config);

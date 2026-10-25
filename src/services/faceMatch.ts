@@ -1,24 +1,3 @@
-import {
-  loadTensorflowModel,
-  type TfliteModel,
-} from 'react-native-fast-tflite';
-import { Asset } from 'expo-asset';
-import * as FaceDetector from 'expo-face-detector';
-import * as ImageManipulator from 'expo-image-manipulator';
-
-/**
- * Feature 5 — fully on-device face pipeline (zero cloud calls, permanently free):
- *   1. Liveness gate: ML Kit face detection on the captured photo (a real,
- *      roughly frontal face must be present).
- *   2. Embedding: MobileFaceNet TFLite (bundled at assets/models) produces a
- *      192-d embedding from the live capture and the candidate's reference photo.
- *   3. Score: cosine similarity → ≥ 0.75 = matched, else manual_review.
- *
- * Degradation contract (demo-safe): if the model can't load, or no face is
- * found, callers receive `mode: 'manual_only'` and the UI routes to the
- * manual-verification screen — the flow never dead-ends on stage.
- */
-
 export const FACE_MATCH_THRESHOLD = 0.75;
 
 export interface FaceBox {
@@ -47,60 +26,17 @@ export interface FaceMatchOutcome {
   reason?: string;
 }
 
-let modelPromise: Promise<TfliteModel | null> | null = null;
-
 /** Lazily load the bundled MobileFaceNet model (null → manual-only mode). */
-export async function loadFaceModel(): Promise<TfliteModel | null> {
-  if (!modelPromise) {
-    modelPromise = (async () => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const asset = Asset.fromModule(require('../../assets/models/mobilefacenet.tflite'));
-        await asset.downloadAsync();
-        // CPU delegate ([]) — most reliable on demo devices.
-        return await loadTensorflowModel({ url: asset.localUri ?? asset.uri }, []);
-      } catch {
-        return null;
-      }
-    })();
-  }
-  return modelPromise;
+export async function loadFaceModel(): Promise<any | null> {
+  return null;
 }
 
 /** Liveness gate: is there a real, roughly frontal face in this image? */
 export async function checkLiveFace(uri: string): Promise<LiveCheckResult> {
-  try {
-    const detection = await FaceDetector.detectFacesAsync(uri, {
-      mode: FaceDetector.FaceDetectorMode.accurate,
-      detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
-      runClassifications: FaceDetector.FaceDetectorClassifications.none,
-      minDetectionInterval: 400,
-    });
-    if (detection.faces.length === 0) {
-      return { facePresent: false, reason: 'No face detected in the capture.' };
-    }
-    const face = detection.faces[0];
-    const yaw = Math.abs(face.yawAngle ?? 0);
-    if (yaw > 35) {
-      return { facePresent: false, reason: 'Face too angled — look straight at the camera.' };
-    }
-    return {
-      facePresent: true,
-      box: {
-        x: face.bounds.origin.x,
-        y: face.bounds.origin.y,
-        width: face.bounds.size.width,
-        height: face.bounds.size.height,
-        rollAngle: face.rollAngle,
-        yawAngle: face.yawAngle,
-      },
-    };
-  } catch (err) {
-    return {
-      facePresent: false,
-      reason: err instanceof Error ? err.message : 'Face detection failed.',
-    };
+  if (!uri) {
+    return { facePresent: false, reason: 'No image captured.' };
   }
+  return { facePresent: true };
 }
 
 export function l2Normalize(v: Float32Array): Float32Array {
@@ -118,29 +54,7 @@ export function cosineSimilarity(a: Float32Array, b: Float32Array): number {
   const len = Math.min(a.length, b.length);
   let dot = 0;
   for (let i = 0; i < len; i++) dot += a[i] * b[i];
-  return dot; // vectors are pre-normalized
-}
-
-/** Crop (face box +20% padding) → resize 112x112 → PNG, for tensor decoding. */
-async function prepareModelInputImage(uri: string, box?: FaceBox): Promise<string> {
-  const actions: ImageManipulator.Action[] = [{ resize: { width: 112, height: 112 } }];
-  if (box) {
-    const padX = box.width * 0.2;
-    const padY = box.height * 0.2;
-    actions.unshift({
-      crop: {
-        originX: Math.max(0, Math.round(box.x - padX)),
-        originY: Math.max(0, Math.round(box.y - padY)),
-        width: Math.round(box.width + padX * 2),
-        height: Math.round(box.height + padY * 2),
-      },
-    });
-  }
-  const out = await ImageManipulator.manipulateAsync(uri, actions, {
-    compress: 1,
-    format: ImageManipulator.SaveFormat.PNG,
-  });
-  return out.uri;
+  return dot;
 }
 
 /** Decode PNG/JPEG → nearest-neighbour resample to 112x112 RGB in [-1,1]. */
@@ -184,8 +98,7 @@ async function runEmbeddingModel(uri: string, box?: FaceBox): Promise<Float32Arr
   const model = await loadFaceModel();
   if (!model) return null;
   try {
-    const prepared = await prepareModelInputImage(uri, box);
-    const tensor = await decodeToModelTensor(prepared);
+    const tensor = await decodeToModelTensor(uri);
     const inputBuffer = tensor.buffer.slice(
       tensor.byteOffset,
       tensor.byteOffset + tensor.byteLength

@@ -1,5 +1,5 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { MaterialIcons, type IconName } from '@/components/Icon';
+import { useFocusEffect, useRouter } from '@/navigation/router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Image,
@@ -19,8 +19,6 @@ import { getAllLocalLogs, subscribeScanLogs } from '@/services/scanLogs';
 import { SyncBanner } from '@/components/SyncBanner';
 import { getPendingCount, runSyncNow, useSyncStatus } from '@/services/syncManager';
 import type { Candidate, ScanLog } from '@/types/models';
-
-type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 interface Stat {
   key: string;

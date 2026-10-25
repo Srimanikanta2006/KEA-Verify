@@ -1,8 +1,7 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialIcons } from '@/components/Icon';
+import { useLocalSearchParams, useRouter } from '@/navigation/router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors, Radius, Type } from '@/constants/theme';
@@ -81,7 +80,7 @@ export default function VerifiedScreen() {
             </Text>
           </View>
           <View style={styles.idCard}>
-            <Image source={{ uri: candidate?.photoUrl }} style={styles.photo} contentFit="cover" />
+            <Image source={{ uri: candidate?.photoUrl }} style={styles.photo} resizeMode="cover" />
             <View style={{ flex: 1 }}>
               <Text style={[Type.headlineXl, { fontSize: 24 }]} numberOfLines={1}>
                 {candidate?.name ?? '…'}

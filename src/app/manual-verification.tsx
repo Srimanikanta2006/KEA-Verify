@@ -1,9 +1,9 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialIcons } from '@/components/Icon';
+import { useLocalSearchParams, useRouter } from '@/navigation/router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -218,7 +218,7 @@ export default function ManualVerificationScreen() {
             KEA Invigilator Field Desk
           </Text>
         </View>
-        <Image source={{ uri: KEA_LOGO_URI }} style={styles.logo} contentFit="cover" />
+        <Image source={{ uri: KEA_LOGO_URI }} style={styles.logo} resizeMode="cover" />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -258,7 +258,7 @@ export default function ManualVerificationScreen() {
           <View style={styles.photoGrid}>
             <View style={styles.photoCell}>
               <View style={styles.photoFrame}>
-                <Image source={{ uri: candidate.photoUrl }} style={styles.photo} contentFit="cover" />
+                <Image source={{ uri: candidate.photoUrl }} style={styles.photo} resizeMode="cover" />
                 <View style={[styles.photoTag, styles.photoTagDark]}>
                   <Text style={styles.photoTagText}>KEA REF PHOTO</Text>
                 </View>
@@ -271,7 +271,7 @@ export default function ManualVerificationScreen() {
             <View style={styles.photoCell}>
               <View style={styles.photoFrame}>
                 {params.liveUri ? (
-                  <Image source={{ uri: params.liveUri }} style={styles.photo} contentFit="cover" />
+                  <Image source={{ uri: params.liveUri }} style={styles.photo} resizeMode="cover" />
                 ) : (
                   <View style={[styles.photo, styles.photoPlaceholder]}>
                     <MaterialIcons name="person-off" size={32} color={Colors.outline} />

@@ -1,11 +1,13 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Image } from 'expo-image';
-import * as Location from 'expo-location';
-import { useRouter } from 'expo-router';
+import { MaterialIcons, type IconName } from '@/components/Icon';
+import { Camera, CameraType } from 'react-native-camera-kit';
+import Geolocation from 'react-native-geolocation-service';
+import { useRouter } from '@/navigation/router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
+  PermissionsAndroid,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,7 +21,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SyncBanner } from '@/components/SyncBanner';
 import { Colors, Radius, Type } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-import { useCameraFocus } from '@/services/cameraFocusEnhancer';
 import { DEMO_CENTRES } from '@/services/demoData';
 import { compareLiveToReference, FACE_MATCH_THRESHOLD } from '@/services/faceMatch';
 import {
@@ -52,7 +53,6 @@ import {
 import { soundFeedback } from '@/services/soundFeedback';
 import type { Candidate, ScanResult } from '@/types/models';
 
-type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
 type ScanState =
   | { phase: 'scanning' }
@@ -82,8 +82,8 @@ const DEMO_OVERRIDE_PILL = false; // keep the design clean; override controls li
 export default function ScanScreen() {
   const router = useRouter();
   const { session } = useAuth();
-  const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
+  const [cameraPermission, setCameraPermission] = useState<'checking' | 'granted' | 'denied'>('checking');
   const [scan, setScan] = useState<ScanState>({ phase: 'scanning' });
   const [geo, setGeo] = useState<GeoState>({ phase: 'checking' });
   const [override, setOverride] = useState<LocationOverride | null>(null);
@@ -104,15 +104,42 @@ export default function ScanScreen() {
   const [scanningSince, setScanningSince] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
   const cooldown = useRef<number>(0);
-  const cameraRef = useRef<CameraView>(null);
-  const {
-    zoom,
-    changeZoom,
-    supportsZoom,
-    focusing,
-    focusTarget,
-    triggerFocus,
-  } = useCameraFocus();
+  const cameraRef = useRef<any>(null);
+  const [zoom, setZoom] = useState(1.0);
+  const [focusing, setFocusing] = useState(false);
+
+  const changeZoom = useCallback((lvl: number) => {
+    setZoom(lvl);
+  }, []);
+
+  const triggerFocus = useCallback(() => {
+    setFocusing(true);
+    setTimeout(() => setFocusing(false), 1200);
+  }, []);
+
+  const requestCamera = useCallback(async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: 'Camera Permission',
+            message: 'KEA-Verify needs camera access to scan candidate QR codes and verify identity.',
+            buttonPositive: 'OK',
+          }
+        );
+        setCameraPermission(granted === PermissionsAndroid.RESULTS.GRANTED ? 'granted' : 'denied');
+      } catch {
+        setCameraPermission('denied');
+      }
+    } else {
+      setCameraPermission('granted');
+    }
+  }, []);
+
+  useEffect(() => {
+    void requestCamera();
+  }, [requestCamera]);
 
   const centre = session?.centre;
 
@@ -133,17 +160,27 @@ export default function ScanScreen() {
         setGeo(geoEval.inside ? { phase: 'ready', geo: geoEval } : { phase: 'blocked', geo: geoEval });
         return;
       }
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setGeo({ phase: 'permission_denied' });
-        return;
+
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          setGeo({ phase: 'permission_denied' });
+          return;
+        }
       }
-      const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+
+      const pos = await new Promise<any>((resolvePos, rejectPos) => {
+        Geolocation.getCurrentPosition(resolvePos, rejectPos, {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 10000,
+        });
       });
+
       // Detect mock / simulated GPS on supported devices
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const isMocked = Boolean((pos as any).mocked);
+      const isMocked = Boolean(pos?.mocked);
       const geoEval = evaluateGeofence(
         {
           lat: pos.coords.latitude,
@@ -276,7 +313,7 @@ export default function ScanScreen() {
     const handle = startQrEscalation({
       takeSnapshot: async () => {
         try {
-          const shot = await cameraRef.current?.takePictureAsync({ quality: 0.5, skipProcessing: true });
+          const shot = await cameraRef.current?.capture();
           return shot?.uri ? { uri: shot.uri } : null;
         } catch {
           return null;
@@ -316,10 +353,7 @@ export default function ScanScreen() {
     async (candidate: Candidate) => {
       setCapturing(true);
       try {
-        const photo = await cameraRef.current?.takePictureAsync({
-          quality: 0.8,
-          skipProcessing: true,
-        });
+        const photo = await cameraRef.current?.capture();
         if (!photo?.uri) throw new Error('Capture failed');
         const outcome = await compareLiveToReference(photo.uri, candidate.photoUrl);
         const score = outcome.score;
@@ -415,9 +449,22 @@ export default function ScanScreen() {
   const scannerActive =
     geo.phase === 'ready' && scan.phase === 'scanning' && !capturing;
 
-  if (permission == null || geo.phase === 'checking') {
+  if (cameraPermission === 'checking' || geo.phase === 'checking') {
     return (
-      <Centered icon="location-searching" text="Checking your location at the exam centre…" />
+      <Centered icon="location-searching" text="Checking permissions and location at the exam centre…" />
+    );
+  }
+
+  if (cameraPermission === 'denied') {
+    return (
+      <Centered
+        icon="videocam-off"
+        text="Camera access is required to scan candidate QR codes and verify identity."
+        actionLabel="Grant Camera Permission"
+        onAction={() => void requestCamera()}
+        secondaryActionLabel="Back to Dashboard"
+        onSecondaryAction={() => router.back()}
+      />
     );
   }
 
@@ -567,17 +614,23 @@ export default function ScanScreen() {
             })}
           </View>
 
-          <CameraView
+          <Camera
             ref={cameraRef}
-            facing="back"
-            autofocus="off"
+            cameraType={CameraType.Back}
             style={[
               StyleSheet.absoluteFill,
-              zoom > 1 && !supportsZoom ? { transform: [{ scale: zoom }] } : undefined,
+              zoom > 1 ? { transform: [{ scale: zoom }] } : undefined,
             ]}
-            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-            enableTorch={torch}
-            onBarcodeScanned={scannerActive ? onBarcode : undefined}
+            scanBarcode={scannerActive}
+            onReadCode={
+              scannerActive
+                ? (event: any) => {
+                    const code = event?.nativeEvent?.codeStringValue;
+                    if (code) onBarcode({ data: code });
+                  }
+                : undefined
+            }
+            torchMode={torch ? 'on' : 'off'}
           />
 
           {/* Tap-to-focus transparent touch area */}
@@ -950,7 +1003,7 @@ function FoundCard({
       <View style={styles.card}>
         <View style={styles.idRow}>
           <View style={styles.photoBox}>
-            <Image source={{ uri: candidate.photoUrl }} style={styles.photo} contentFit="cover" />
+            <Image source={{ uri: candidate.photoUrl }} style={styles.photo} resizeMode="cover" />
             <View style={styles.photoTag}>
               <Text style={styles.photoTagText}>Hall Admit</Text>
             </View>

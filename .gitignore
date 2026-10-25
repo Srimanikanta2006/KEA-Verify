@@ -33,7 +33,6 @@ expo-env.d.ts
 
 # Native build folders
 /ios/
-/android/
 
 # Package manager debug
 npm-debug.*

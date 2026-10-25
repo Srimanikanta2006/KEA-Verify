@@ -1,10 +1,8 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialIcons } from '@/components/Icon';
+import { useFocusEffect, useLocalSearchParams, useRouter } from '@/navigation/router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,6 +10,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors, KEA_LOGO_URI, Radius, Type } from '@/constants/theme';
@@ -162,16 +162,15 @@ export default function RecordsScreen() {
       });
     const csv = [header, ...rows].join('\n');
     try {
-      const file = new File(Paths.cache, 'kea-scan-logs.csv');
-      file.write(csv);
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'text/csv',
-          dialogTitle: 'KEA Verify — scan logs',
-        });
-      }
+      const path = `${RNFS.CachesDirectoryPath}/kea-scan-logs.csv`;
+      await RNFS.writeFile(path, csv, 'utf8');
+      await Share.open({
+        url: `file://${path}`,
+        type: 'text/csv',
+        title: 'KEA Verify — scan logs',
+      });
     } catch {
-      // sharing unavailable — silent, export is best-effort
+      // sharing unavailable or dismissed
     }
   }, [logs, rosterMap]);
 
@@ -190,7 +189,7 @@ export default function RecordsScreen() {
             {session.centre.name} · {(session.centre as { code?: string }).code ?? ''}
           </Text>
         </View>
-        <Image source={{ uri: KEA_LOGO_URI }} style={styles.logo} contentFit="cover" />
+        <Image source={{ uri: KEA_LOGO_URI }} style={styles.logo} resizeMode="cover" />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -263,7 +262,7 @@ export default function RecordsScreen() {
 
             {filteredRoster.map((c) => (
               <View key={c.candidateId} style={styles.rowCard}>
-                <Image source={{ uri: c.photoUrl }} style={styles.rowPhoto} contentFit="cover" />
+                <Image source={{ uri: c.photoUrl }} style={styles.rowPhoto} resizeMode="cover" />
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={Type.titleSm} numberOfLines={1}>
                     {c.name}
