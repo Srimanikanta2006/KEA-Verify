@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4 } from 'uuid';
 import {
   collection,
   doc,
@@ -56,9 +55,14 @@ export interface RecordScanInput {
   notes?: string;
 }
 
+/** Pure JS RFC-4122 v4 UUID generator (no dependency on crypto.getRandomValues) */
 export function newScanId(): string {
-  return uuidv4();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
+
 
 async function readMirror(): Promise<ScanLog[]> {
   try {
@@ -174,7 +178,8 @@ export interface ExistingVerification {
  * then Firestore for cross-device catches.
  */
 export async function findTodaysVerification(
-  candidateId: string
+  candidateId: string,
+  rollNo?: string
 ): Promise<ExistingVerification | null> {
   const today = dayKeyFor(Date.now());
   // Only an admitted candidate ('matched') blocks re-entry. 'manual_review' means
@@ -183,10 +188,19 @@ export async function findTodaysVerification(
     l.result === 'matched' && dayKeyFor(l.timestamp) === today;
 
   const mirror = await readMirror();
+  const cid = candidateId.trim().toLowerCase();
+  const roll = rollNo?.trim().toLowerCase();
+
   // Latest-first so the "original check-in" shown for duplicates is the true first one.
   const local = [...mirror]
     .reverse()
-    .find((l) => l.candidateId === candidateId && isTodayVerified(l));
+    .find(
+      (l) =>
+        (l.candidateId.toLowerCase() === cid ||
+          (roll && l.candidateId.toLowerCase() === roll) ||
+          (roll && l.notes?.toLowerCase().includes(roll))) &&
+        isTodayVerified(l)
+    );
   if (local) return { log: local, verifierLabel: local.verifierId };
 
   if (isFirebaseConfigured) {
@@ -227,8 +241,9 @@ export function evaluateScanAgainstPolicy(
     if (candidate.allottedCentreId !== session.assignedCentreId) {
       return { status: 'centre_mismatch', allottedCentreId: candidate.allottedCentreId };
     }
-    const existing = await findTodaysVerification(candidate.candidateId);
+    const existing = await findTodaysVerification(candidate.candidateId, candidate.rollNo);
     if (existing) return { status: 'duplicate', existing };
     return { status: 'ok' };
   })();
 }
+

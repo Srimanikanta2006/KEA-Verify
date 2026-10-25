@@ -1,6 +1,6 @@
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 export type RootStackParamList = {
   index: undefined;
@@ -48,30 +48,35 @@ function parseTarget(target: string | { pathname: string; params?: any }): {
   };
 }
 
+
 export function useRouter() {
   const navigation = useNavigation<NavigationProp>();
 
-  return {
-    push: (target: string | { pathname: string; params?: any }) => {
-      const { routeName, params } = parseTarget(target);
-      navigation.navigate(routeName as any, params);
-    },
-    replace: (target: string | { pathname: string; params?: any }) => {
-      const { routeName, params } = parseTarget(target);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: routeName as any, params }],
-      });
-    },
-    back: () => {
-      if (navigation.canGoBack()) {
-        navigation.goBack();
-      } else {
-        navigation.navigate('dashboard');
-      }
-    },
-    canGoBack: () => navigation.canGoBack(),
-  };
+  return useMemo(
+    () => ({
+      push: (target: string | { pathname: string; params?: any }) => {
+        const { routeName, params } = parseTarget(target);
+        navigation.navigate(routeName as any, params);
+      },
+      replace: (target: string | { pathname: string; params?: any }) => {
+        const { routeName, params } = parseTarget(target);
+        if ('replace' in navigation && typeof (navigation as any).replace === 'function') {
+          (navigation as any).replace(routeName, params);
+        } else {
+          navigation.navigate(routeName as any, params);
+        }
+      },
+      back: () => {
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+        } else {
+          navigation.navigate('dashboard');
+        }
+      },
+      canGoBack: () => navigation.canGoBack(),
+    }),
+    [navigation]
+  );
 }
 
 export function useLocalSearchParams<T extends Record<string, any>>(): T {

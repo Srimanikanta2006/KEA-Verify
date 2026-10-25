@@ -1,11 +1,13 @@
+import { NativeModules, Platform, Vibration } from 'react-native';
+
 /**
  * Real-time audio and haptic feedback service for KEA-Verify.
  *
  * Designed for noisy, high-throughput exam gate conditions where invigilators
  * cannot continuously stare at the smartphone screen.
  *
- * Uses the Web Audio API on web (synthesized frequencies — 100% offline,
- * 0 external asset loading latency) and web/device vibration patterns.
+ * Combines native device audio feedback (via Android SoundManager) and
+ * high-contrast tactile vibration cues, with Web Audio fallback on web.
  */
 
 class SoundFeedbackService {
@@ -33,11 +35,23 @@ class SoundFeedbackService {
   }
 
   /**
-   * Crisp high-pitch ascending chime (880Hz -> 1320Hz) indicating successful
-   * candidate verification and gate clearance.
+   * Crisp confirmation tone + snappy tactile pulse
+   * indicating successful candidate verification and gate clearance.
    */
   public playSuccess(): void {
-    // 1. Audio tone
+    // 1. Native device audio click/chime on Android/iOS
+    try {
+      if (Platform.OS !== 'web') {
+        NativeModules.SoundManager?.playTouchSound();
+        setTimeout(() => {
+          NativeModules.SoundManager?.playTouchSound();
+        }, 90);
+      }
+    } catch {
+      // Native audio is best-effort
+    }
+
+    // 2. Synthesized Web Audio chime (on web/supported runtimes)
     try {
       const ctx = this.getAudioContext();
       if (ctx) {
@@ -49,7 +63,7 @@ class SoundFeedbackService {
         osc.frequency.setValueAtTime(880, now); // A5
         osc.frequency.exponentialRampToValueAtTime(1320, now + 0.12); // E6
 
-        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.setValueAtTime(0.2, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
         osc.connect(gain);
@@ -62,10 +76,12 @@ class SoundFeedbackService {
       // Audio is best-effort
     }
 
-    // 2. Haptic feedback
+    // 3. Tactile Vibration feedback (80ms clean pulse)
     try {
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate(60); // Clean 60ms pulse
+      if (Platform.OS !== 'web') {
+        Vibration.vibrate(80);
+      } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(60);
       }
     } catch {
       // Haptics are best-effort
@@ -73,11 +89,26 @@ class SoundFeedbackService {
   }
 
   /**
-   * Low harsh double-buzz (220Hz -> 160Hz) indicating rejection,
-   * centre mismatch, or passback duplicate attempt.
+   * Low warning alert + distinct warning vibration
+   * indicating rejection, centre mismatch, or passback duplicate attempt.
    */
   public playError(): void {
-    // 1. Audio tone
+    // 1. Native device audio alert on Android/iOS
+    try {
+      if (Platform.OS !== 'web') {
+        NativeModules.SoundManager?.playTouchSound();
+        setTimeout(() => {
+          NativeModules.SoundManager?.playTouchSound();
+        }, 110);
+        setTimeout(() => {
+          NativeModules.SoundManager?.playTouchSound();
+        }, 220);
+      }
+    } catch {
+      // Native audio is best-effort
+    }
+
+    // 2. Synthesized Web Audio double buzz (on web/supported runtimes)
     try {
       const ctx = this.getAudioContext();
       if (ctx) {
@@ -90,7 +121,7 @@ class SoundFeedbackService {
         osc1.frequency.setValueAtTime(220, now);
         osc1.frequency.setValueAtTime(160, now + 0.08);
 
-        gain1.gain.setValueAtTime(0.22, now);
+        gain1.gain.setValueAtTime(0.25, now);
         gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
 
         osc1.connect(gain1);
@@ -105,7 +136,7 @@ class SoundFeedbackService {
         osc2.frequency.setValueAtTime(220, now + 0.16);
         osc2.frequency.setValueAtTime(140, now + 0.24);
 
-        gain2.gain.setValueAtTime(0.22, now + 0.16);
+        gain2.gain.setValueAtTime(0.25, now + 0.16);
         gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
 
         osc2.connect(gain2);
@@ -117,10 +148,12 @@ class SoundFeedbackService {
       // Audio is best-effort
     }
 
-    // 2. Haptic feedback (Double alert buzz: 100ms on, 60ms pause, 180ms on)
+    // 3. Tactile Vibration feedback (Alert pattern: 100ms buzz, 60ms pause, 200ms buzz)
     try {
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        navigator.vibrate([100, 60, 180]);
+      if (Platform.OS !== 'web') {
+        Vibration.vibrate([0, 100, 60, 200]);
+      } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([100, 60, 200]);
       }
     } catch {
       // Haptics are best-effort

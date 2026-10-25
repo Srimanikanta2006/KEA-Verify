@@ -13,10 +13,12 @@ const AUTO_RETURN_MS = 2500;
 
 export default function VerifiedScreen() {
   const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
+
   const params = useLocalSearchParams<{ candidateId: string; score?: string; via?: string }>();
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [remaining, setRemaining] = useState(AUTO_RETURN_MS);
-  const raf = useRef<number | null>(null);
 
   useEffect(() => {
     if (!params.candidateId) return;
@@ -32,20 +34,26 @@ export default function VerifiedScreen() {
   // Auto-return countdown (design: 2.5s with progress bar + Skip)
   useEffect(() => {
     const startedAt = Date.now();
+    let timerDone = false;
     const interval = setInterval(() => {
-      const left = AUTO_RETURN_MS - (Date.now() - startedAt);
+      const elapsed = Date.now() - startedAt;
+      const left = AUTO_RETURN_MS - elapsed;
       if (left <= 0) {
-        clearInterval(interval);
-        router.replace('/scan');
+        if (!timerDone) {
+          timerDone = true;
+          clearInterval(interval);
+          setRemaining(0);
+          routerRef.current.replace('/scan');
+        }
       } else {
         setRemaining(left);
       }
     }, 50);
+
     return () => {
-      if (raf.current) clearTimeout(raf.current);
       clearInterval(interval);
     };
-  }, [router]);
+  }, []);
 
   const secondsLeft = (remaining / 1000).toFixed(1);
   const pct = (remaining / AUTO_RETURN_MS) * 100;

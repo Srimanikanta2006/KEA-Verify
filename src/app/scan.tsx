@@ -404,6 +404,28 @@ export default function ScanScreen() {
     [router]
   );
 
+  const handleQuickAdmit = useCallback(
+    async (candidate: Candidate) => {
+      if (!session) return;
+      soundFeedback.playSuccess();
+      await recordScan({
+        candidate,
+        session,
+        result: 'matched',
+        deviceLat: lastFix?.lat ?? null,
+        deviceLng: lastFix?.lng ?? null,
+        entryMethod: 'qr',
+        notes: 'Gate admission cleared by invigilator',
+      });
+      router.replace({
+        pathname: '/verified',
+        params: { candidateId: candidate.candidateId, via: 'invigilator' },
+      });
+    },
+    [session, lastFix, router]
+  );
+
+
   const pinToCentre = async () => {
     if (!centre) return;
     const o: LocationOverride = {
@@ -609,6 +631,10 @@ export default function ScanScreen() {
               zoom > 1 ? { transform: [{ scale: zoom }] } : undefined,
             ]}
             scanBarcode={scannerActive}
+            showFrame={true}
+            laserColor="transparent"
+            frameColor="transparent"
+            barcodeFrameSize={{ width: 180, height: 180 }}
             onReadCode={
               scannerActive
                 ? (event: any) => {
@@ -697,6 +723,7 @@ export default function ScanScreen() {
             captureError={captureError}
             onCapture={handleCapture}
             onManualOverride={handleManualOverride}
+            onQuickAdmit={handleQuickAdmit}
           />
         ) : scan.phase === 'not_found' ? (
           <NotFoundCard raw={scan.raw} onRetry={reset} />
@@ -969,6 +996,7 @@ function FoundCard({
   captureError,
   onCapture,
   onManualOverride,
+  onQuickAdmit,
 }: {
   candidate: Candidate;
   evaluation: ScanEvaluation;
@@ -977,6 +1005,7 @@ function FoundCard({
   captureError: boolean;
   onCapture: (candidate: Candidate) => void;
   onManualOverride: (candidate: Candidate) => void;
+  onQuickAdmit: (candidate: Candidate) => void;
 }) {
   const router = useRouter();
   const centreCode = candidate.allottedCentreId.replace('centre_', '').toUpperCase();
@@ -1082,6 +1111,16 @@ function FoundCard({
             )}
             <Text style={[Type.titleSm, { color: Colors['on-primary'] }]}>
               {capturing ? 'Verifying face on-device…' : 'Capture Live Photo & Auto-Verify'}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.primaryAction, { backgroundColor: Colors.tertiary, marginTop: 4 }]}
+            disabled={capturing}
+            onPress={() => onQuickAdmit(candidate)}
+          >
+            <MaterialIcons name="how-to-reg" size={20} color={Colors['on-tertiary']} />
+            <Text style={[Type.titleSm, { color: Colors['on-tertiary'], fontWeight: '700' }]}>
+              Admit Candidate · Clear Gate
             </Text>
           </Pressable>
           <Pressable
@@ -1318,11 +1357,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: 56,
-    height: 56,
-    marginTop: -28,
-    marginLeft: -28,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    marginTop: -32,
+    marginLeft: -32,
+    borderRadius: 32,
     borderWidth: 2,
     borderColor: Colors['primary-fixed-dim'],
     borderStyle: 'dashed',
@@ -1338,7 +1377,8 @@ const styles = StyleSheet.create({
   },
   focusingLabel: {
     position: 'absolute',
-    bottom: -18,
+    bottom: -22,
+    alignSelf: 'center',
     ...Type.labelSm,
     fontSize: 9,
     color: Colors['primary-fixed-dim'],
@@ -1363,23 +1403,36 @@ const styles = StyleSheet.create({
   },
   scanline: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 24,
+    top: '50%',
+    left: '50%',
+    width: 172,
     height: 2,
+    marginLeft: -86,
+    marginTop: -1,
     backgroundColor: Colors['primary-container'],
-    opacity: 0.8,
+    opacity: 0.75,
   },
   reticle: {
     position: 'absolute',
-    alignSelf: 'center',
-    top: '22%',
-    width: 160,
-    height: 160,
+    top: '50%',
+    left: '50%',
+    width: 180,
+    height: 180,
+    marginTop: -90,
+    marginLeft: -90,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 10,
   },
-  pillRow: { flexDirection: 'row', justifyContent: 'center', padding: 12 },
+  pillRow: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    zIndex: 25,
+  },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
