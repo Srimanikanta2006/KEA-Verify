@@ -1,0 +1,10 @@
+.git/
+node_modules/
+android/build/
+android/app/build/
+android/.gradle/
+android/.cxx/
+android/.idea/
+android/local.properties
+eas_build_log*.txt
+fetch-*.cjs
