@@ -1,6 +1,6 @@
 # KEA Verify — Exam Centre Candidate Verification System
 
-[![Live Web App](https://img.shields.io/badge/Live%20App-kea--verify.web.app-success?style=for-the-badge&logo=firebase)](https://kea-verify.web.app)
+[![Live Web App](https://img.shields.io/badge/Live%20App-kea--verify.vercel.app-success?style=for-the-badge&logo=vercel)](https://kea-verify.vercel.app)
 [![Expo SDK 52/57](https://img.shields.io/badge/Expo%20SDK-57-blue?style=for-the-badge&logo=expo)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?style=for-the-badge&logo=react)](https://reactnative.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
@@ -16,7 +16,7 @@
 - **Duplicate Attendance Fraud**: Immediate anti-passback detection flags any hall ticket already scanned earlier.
 - **Network Outage Failures**: An offline-first local queue records verifications instantly and synchronizes idempotently to Cloud Firestore once network is restored.
 
-**Live Production URL:** [https://kea-verify.web.app](https://kea-verify.web.app)
+**Live Production URL:** [https://kea-verify.vercel.app](https://kea-verify.vercel.app)
 
 ---
 
@@ -26,7 +26,7 @@
 |---|---|---|
 | **Core Framework** | React Native (Expo SDK 52/57), TypeScript (Strict) | Single cross-platform codebase supporting Android, iOS, and Web. |
 | **Routing & Navigation** | Expo Router (v4, file-based routing) | Deep-linking, nested layouts, modals, and screen transitions. |
-| **Backend & Cloud** | Google Firebase (Auth, Firestore, Hosting) | Secure verifier authentication, real-time database, security rules, and global hosting. |
+| **Backend & Cloud** | Google Firebase (Auth, Firestore) & Vercel (Web Hosting) | Secure verifier authentication, real-time database, security rules, and global edge hosting. |
 | **Camera & Vision** | `expo-camera`, Web `MediaStreamTrack` API, `jsQR`, BarcodeDetector API | Full HD 1080p stream, continuous hardware autofocus, tap-to-focus, and optical/digital zoom. |
 | **Location & Geofencing** | `expo-location`, Haversine Distance Algorithm | Geographic boundary enforcement verifying scans occur inside the designated centre radius (<500m). |
 | **Biometrics & AI** | On-device MobileFaceNet embedding logic, Expo Image Manipulator | Live face capture vs reference photo matching with cosine similarity scoring. |
